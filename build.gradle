@@ -37,7 +37,7 @@ dependencies {
     testImplementation "net.runelite:jshell:${runeLiteVersion}"
 }
 
-group = 'com.ahdoozy.goaltrackerv2'
+group = 'com.toofifty.goaltracker'
 version = '1.0.4'
 
 tasks.withType(JavaCompile) {
