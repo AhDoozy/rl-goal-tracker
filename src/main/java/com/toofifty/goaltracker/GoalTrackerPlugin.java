@@ -41,7 +41,7 @@ import java.awt.*;
 import java.util.List;
 
 @Slf4j
-@PluginDescriptor(name = "Goal Tracker V2", description = "Keep track of your goals and complete them automatically")
+@PluginDescriptor(name = "Goal Tracker", description = "Keep track of your goals and complete them automatically")
 /**
  * Main entry point for the Goal Tracker plugin.
  * Handles lifecycle (startup/shutdown), UI registration, and listens for
@@ -195,7 +195,7 @@ public final class GoalTrackerPlugin extends Plugin
         // Defensive guards to avoid NPEs during test bootstrap if DI bindings are missing
         if (goalManager == null || itemCache == null || goalTrackerPanel == null || itemManager == null || clientToolbar == null)
         {
-            log.warn("GoalTrackerV2Plugin: skipping full startup because a dependency was null. goalManager={}, itemCache={}, panel={}, itemManager={}, toolbar={}",
+            log.warn("GoalTrackerPlugin: skipping full startup because a dependency was null. goalManager={}, itemCache={}, panel={}, itemManager={}, toolbar={}",
                     goalManager != null, itemCache != null, goalTrackerPanel != null, itemManager != null, clientToolbar != null);
             return;
         }
@@ -204,7 +204,7 @@ public final class GoalTrackerPlugin extends Plugin
             goalManager.load();
             itemCache.load();
         } catch (Exception ex) {
-            log.error("GoalTrackerV2Plugin: failed to load persisted state", ex);
+            log.error("GoalTrackerPlugin: failed to load persisted state", ex);
         }
 
         goalTrackerPanel.home();
@@ -212,7 +212,7 @@ public final class GoalTrackerPlugin extends Plugin
         final AsyncBufferedImage icon = itemManager.getImage(ItemID.TODO_LIST);
         if (icon == null)
         {
-            log.warn("GoalTrackerV2Plugin: icon was null; skipping sidebar button creation");
+            log.warn("GoalTrackerPlugin: icon was null; skipping sidebar button creation");
         }
         else
         {
