@@ -1,97 +1,51 @@
 # 🏆 Goal Tracker
 
-> A complete reimagining of the Goal Tracker plugin — rebuilt with a more modern UI, powerful new features, and improved stability to help you plan, track, and achieve your Old School RuneScape goals with ease.
+> A reimagining of the Goal Tracker plugin — rebuilt with a more modern UI, powerful new features, and improved stability to help you plan, track, and achieve your Old School RuneScape goals with ease.  
+> It is now faster, cleaner, and more reliable — introducing a Quest Requirements system, presets, improved visuals, and smoother task/goal management.
 
 ---
 
-<details>
-<summary><h2 style="margin:0;display:inline;">✨ New Features</h2></summary>
+✨ New Features
+- Shift+Click task removal for faster management
+- Automatic goal status checks for real-time progress
+- ActionBar & ActionBarButton UI components for navigation and bulk actions
+- Progress bars added under each goal card on the Home panel for quick visual tracking
+- Quest Requirements file built and integrated for quick access to quest prerequisites
+- Preset Goal Lists
+- Export/Import goals to JSON with full UI refresh
+- Inline editing for goal titles and manual tasks
+- Long titles now ellipsized with hover-to-view full text
 
-- Shift+Click removal of tasks for faster task management  
-- New ActionBar and ActionBarButton UI components  
-- Hover states for better visual feedback  
-- New context menu organization for streamlined interaction  
-- Search toggle improvements for easier task searching  
-- New task right‑click menu with grouped **Move** submenu and cascading complete/incomplete toggle that applies to children  
-- Redesigned goal cards with lighter fills, full shadows, and hover/press effects on the card face
-- Export and Import functionality to save and load goals via JSON files
-- Presets automatically expand quest prerequisites  
-- Goal titles and ManualTask descriptions support click-to-edit with inline text fields  
-- Long goal and task titles are ellipsized with … and show full text on hover  
+♻️ Redesigned
+- Quest prerequisites button leveraging the new Quest Requirements file
+- Cascading completion to auto-complete related tasks
+- Dropdown quest selector for faster task addition
+- Right-click menus streamlined for prerequisites and child task options
+- Goal/task cards with lighter fills, shadows, hover/press effects, and clear header dividers
 
-### ♻️ Redesigned Features
+🐛 Fixes
+- Undo/Redo functionality cleanup
+- ActionBarButton painting glitches resolved
+- Proper refresh handling in GoalTrackerPanel and ListPanel
+- Fixed blank/refresh issues when switching panels or logging in
+- Item icons preload correctly at startup/login/import
+- Home panel refreshes immediately after task completion
+- Layout fixes around Export button to avoid overlap
+- Recursive refresh of child tasks ensures status consistency
 
-- Redesigned quest prerequisites button for quick access  
-- Redesigned completion cascading to automatically complete related tasks  
-- Redesigned dropdown quest selector for faster quest task addition  
-- Redesigned right-click menus for prerequisites and child completion options  
-- Redesigned manual toggling for preset tasks  
-- Redesigned chatbox notification colors with customization options  
-- Redesigned quest status detection with improved auto-refresh  
-- Redesigned completion chat messages delivered as proper Game messages  
+### 🖼️ Screenshots
 
-</details>
+- **Home panel with goal cards** — redesigned buttons with hover/press effects, new progress bars under each goal card, plus the “Add from Preset” button and Export/Import to JSON buttons for easy sharing.  
+  <img src="img/home_panel_new.jpg" alt="Home panel screenshot showing goal cards" width="40%" style="border:1px solid #000; box-shadow: 2px 2px 6px rgba(0,0,0,0.3); border-radius:4px;" />
 
-<details>
-<summary><h2 style="margin:0;display:inline;">🔧 Improvements</h2></summary>
+- **Inside a goal with task list** — supports auto-fill quest prerequisites, right-click task options, a new item search box, and a dropdown quest selector.  
+  <img src="img/goal_task_panel.jpg" alt="Goal task panel screenshot with tasks list" width="40%" style="border:1px solid #000; box-shadow: 2px 2px 6px rgba(0,0,0,0.3); border-radius:4px;" />
 
-- Refreshed UI with updated design elements and improved readability  
-- Consistent ActionBar UI throughout the plugin  
-- Unified goal view header for a cohesive look  
-- Improved context menus and hover detection accuracy  
-- Copy and paste support in the goal name input field  
-- Refined ActionBar spacing to fit Export and Import buttons without overlap  
-- Progress text (e.g., “1/10”) on goal cards now has reserved width and never clips  
-- + Add goal and Add from Preset buttons restyled and stacked vertically  
-- Task rows updated to match goal cards with icons and ellipsized titles  
-- Debounced quest detection and scheduled UI refresh to prevent lag  
-- Goal/task panels auto-refresh reliably after quest or item detection  
-- Extended item task detection to include equipment, seed vault, and group storage  
+- **Right‑click menu on a Home panel goal card** — manage goals quickly with options to move, pin, mark complete/incomplete, or delete.  
+  <img alt="Right-click menu screenshot on Home panel goal card" src="img/right_click_goals.jpg" width="50%"/>
 
-</details>
-
-<details>
-<summary><h2 style="margin:0;display:inline;">🐛 Fixes</h2></summary>
-
-- Undo/Redo functionality cleanup for smoother editing  
-- ActionBarButton painting fixes to prevent visual glitches  
-- Improved refresh behavior in Home and List panels  
-- Enhanced mouse selection accuracy  
-- Keyboard shortcut fixes and enhancements  
-- Automatic removal of empty goals to keep lists tidy  
-- Visual refresh issue resolved on login  
-- Fixed child task refresh issues  
-- Fixed blank panel issue when switching views  
-- Fixed completion chat messages to appear properly with configured colors  
-- Export/Import buttons now work correctly  
-- Item icons preload correctly on startup, login, and after import  
-- Home panel refreshes correctly after completing a task  
-- Layout adjustments to fix overlapping Export button  
-- Fixed Shield of Arrav preset indentation for partner-finding step  
-- Sidebar refreshes automatically after quest or item detection  
-
-</details>
-
-<details>
-<summary><h2 style="margin:0;display:inline;">🖼️ Screenshots</h2></summary>
-
-### Home panel with goal cards  
-*Redesigned goal cards with progress bars, hover effects, and instant refresh — plus the new “Add from Preset” button and Export/Import features for easy sharing and backups.*  
-![Goal Tracker Home Panel](img/home_panel_new.jpg)
-
-### Home panel right‑click menu  
-*New options: move goal up/down, mark all complete/incomplete, and pin/unpin goals.*  
-![Goal Tracker Right Click Menu](img/right_click_goals.jpg)  
-
-### Inside a goal with task list  
-*Task rows now show icons, ellipsized text, and inline editing — with redesigned item search & quest features, plus an Add Pre-reqs button for quests (using our built-in list), along with Undo/Redo buttons.*  
-![Goal Tracker Task List](img/goal_task_panel.jpg)  
-
-### Add from Preset  
-*Quickly insert curated presets like Ironman Progression, Void set, or Barrows Gear.*  
-![Goal Tracker Add From Preset](img/add_from_preset.jpg)
-
-</details>
+- **Add from preset** — includes built-in support for Barrows gear, Void armor sets, and basic Ironman progression presets.  
+  <img alt="Add from preset screenshot with preset options" src="img/add_from_preset.jpg" width="60%"/>
 
 -----
 <details>
