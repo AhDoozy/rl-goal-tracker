@@ -1,4 +1,5 @@
-# Changelog
+# AhDoozy's Changelog
+Please leave for my sanity. thanks :) 
 
 ### Added
 - Item task auto-detection across inventory, equipment, bank, seed vault, and group storage.
