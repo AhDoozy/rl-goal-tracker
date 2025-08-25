@@ -17,7 +17,11 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
-public class GoalManager
+/**
+ * Central manager for plugin goals.
+ * Handles create/load/save, JSON import/export, and listener notifications.
+ */
+public final class GoalManager
 {
     @Inject
     private GoalTrackerConfig config;

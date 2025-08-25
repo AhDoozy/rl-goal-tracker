@@ -1,9 +1,9 @@
 package com.toofifty.goaltracker.models;
 
-import com.toofifty.goaltracker.utils.ReorderableList;
 import com.toofifty.goaltracker.models.enums.Status;
 import com.toofifty.goaltracker.models.task.ItemTask;
 import com.toofifty.goaltracker.models.task.ManualTask;
+import com.toofifty.goaltracker.utils.ReorderableList;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

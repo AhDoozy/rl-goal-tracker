@@ -1,8 +1,14 @@
 package com.toofifty.goaltracker.services;
 
+import com.toofifty.goaltracker.models.task.Task;
+import com.toofifty.goaltracker.models.task.SkillLevelTask;
+import com.toofifty.goaltracker.models.task.SkillXpTask;
+import com.toofifty.goaltracker.models.task.QuestTask;
+import com.toofifty.goaltracker.models.task.ItemTask;
+import com.toofifty.goaltracker.models.task.ManualTask;
+
 import com.toofifty.goaltracker.ItemCache;
 import com.toofifty.goaltracker.models.enums.Status;
-import com.toofifty.goaltracker.models.task.*;
 import net.runelite.api.*;
 import net.runelite.api.events.StatChanged;
 import org.junit.jupiter.api.Test;
@@ -11,7 +17,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)

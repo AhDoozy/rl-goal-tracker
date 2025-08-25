@@ -9,7 +9,11 @@ import net.runelite.api.Skill;
 @Setter
 @Getter
 @SuperBuilder
-public class SkillLevelTask extends Task
+/**
+ * Task representing reaching a target level in a skill.
+ * Stores the RuneLite Skill and required level.
+ */
+public final class SkillLevelTask extends Task
 {
     private Skill skill;
     private int level;
@@ -18,6 +22,12 @@ public class SkillLevelTask extends Task
     public String toString()
     {
         return String.format("%s %s", level, skill.getName());
+    }
+
+    @Override
+    public String getDisplayName()
+    {
+        return String.format("Reach level %d %s", level, skill.getName());
     }
 
     @Override

@@ -7,8 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Type;
 
+/**
+ * Gson adapter for polymorphic Task serialization.
+ * Adds a "type" field and deserializes into the correct Task subclass.
+ */
 @Slf4j
-public class TaskAdapter implements JsonSerializer<Task>, JsonDeserializer<Task> {
+public final class TaskAdapter implements JsonSerializer<Task>, JsonDeserializer<Task> {
 
     @Override
     public JsonElement serialize(Task src, Type typeOfSrc, JsonSerializationContext context) {
@@ -19,7 +23,7 @@ public class TaskAdapter implements JsonSerializer<Task>, JsonDeserializer<Task>
 
     @Override
     public Task deserialize(JsonElement json, Type typeOfT,
-                               JsonDeserializationContext context) throws JsonParseException  {
+                            JsonDeserializationContext context) throws JsonParseException  {
         TaskType taskType = TaskType.fromString(json.getAsJsonObject().get("type").getAsString());
         switch (taskType) {
             case SKILL_XP:

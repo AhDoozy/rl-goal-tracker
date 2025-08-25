@@ -1,12 +1,15 @@
 package com.toofifty.goaltracker.ui.components;
 
-import java.awt.FlowLayout;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import javax.swing.BoxLayout;
 import net.runelite.client.ui.ColorScheme;
 
-public class ActionBar extends JPanel
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+
+/**
+ * Horizontal container with left- and right-aligned sections for action buttons.
+ */
+public final class ActionBar extends JPanel
 {
     private final JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 3, 0));
     private final JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 3, 0));

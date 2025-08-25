@@ -5,6 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.runelite.api.QuestState;
 
+/**
+ * Generic task/goal status enum (not_started, in_progress, completed).
+ * Provides mapping from RuneLite QuestState and convenience checks.
+ */
 @Getter
 @AllArgsConstructor
 public enum Status

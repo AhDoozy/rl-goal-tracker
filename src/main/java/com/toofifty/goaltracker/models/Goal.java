@@ -1,9 +1,9 @@
 package com.toofifty.goaltracker.models;
 
 import com.google.gson.annotations.SerializedName;
-import com.toofifty.goaltracker.utils.ReorderableList;
 import com.toofifty.goaltracker.models.enums.Status;
 import com.toofifty.goaltracker.models.task.Task;
+import com.toofifty.goaltracker.utils.ReorderableList;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,10 +14,14 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * Represents a player goal containing one or more tasks.
+ * Provides helpers for status aggregation and task updates.
+ */
 @Setter
 @Getter
 @SuperBuilder
-public class Goal
+public final class Goal
 {
     @Builder.Default
     private String description = "New goal";
@@ -34,35 +38,47 @@ public class Goal
 
     private List<Task> filterBy(Predicate<Task> predicate)
     {
-        return this.getTasks().stream().filter(predicate).collect(Collectors.toList());
+        return tasks.stream().filter(predicate).collect(Collectors.toList());
     }
 
-    public boolean isStatus(Status status) {
-        return this.getTasks().stream().allMatch((task) -> task.getStatus() == status);
+    /** True if all tasks are of the given status. */
+    public boolean isStatus(Status status)
+    {
+        return tasks.stream().allMatch(task -> task.getStatus() == status);
     }
 
-    public boolean isAnyStatus(Status ...statuses) {
-        return this.getTasks().stream().anyMatch((task) -> Arrays.stream(statuses).anyMatch((status) -> status == task.getStatus()));
+    /** True if any task matches one of the given statuses. */
+    public boolean isAnyStatus(Status... statuses)
+    {
+        return tasks.stream().anyMatch(task ->
+            Arrays.stream(statuses).anyMatch(s -> s == task.getStatus()));
     }
 
-    public List<Task> getComplete() {
-        return this.filterBy(Task::isDone);
+    /** List of completed tasks. */
+    public List<Task> getComplete()
+    {
+        return filterBy(Task::isDone);
     }
 
-    public Status getStatus() {
-        if (this.isStatus(Status.COMPLETED)) {
+    /** Aggregated status of this goal. */
+    public Status getStatus()
+    {
+        if (isStatus(Status.COMPLETED))
+        {
             return Status.COMPLETED;
         }
-
-        if (this.isAnyStatus(Status.IN_PROGRESS, Status.COMPLETED)) {
+        if (isAnyStatus(Status.IN_PROGRESS, Status.COMPLETED))
+        {
             return Status.IN_PROGRESS;
         }
-
         return Status.NOT_STARTED;
     }
 
-    public void setAllTasksCompleted(boolean completed) {
-        for (Task task : tasks) {
+    /** Mark all tasks as complete or not started. */
+    public void setAllTasksCompleted(boolean completed)
+    {
+        for (Task task : tasks)
+        {
             task.setStatus(completed ? Status.COMPLETED : Status.NOT_STARTED);
         }
     }

@@ -1,23 +1,23 @@
 package com.toofifty.goaltracker.ui.components;
 
-import com.toofifty.goaltracker.utils.ReorderableList;
-import com.toofifty.goaltracker.ui.Refreshable;
 import com.toofifty.goaltracker.models.Goal;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.function.Consumer;
-import java.util.function.BiConsumer;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JComponent;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.MatteBorder;
+import com.toofifty.goaltracker.ui.Refreshable;
+import com.toofifty.goaltracker.utils.ReorderableList;
 import net.runelite.client.ui.ColorScheme;
 
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.MatteBorder;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
+/**
+ * Generic panel representing a list item (Goal or Task).
+ * Provides context menu actions (move, remove) and hover/press styling.
+ */
 public class ListItemPanel<T> extends JPanel implements Refreshable
 {
     protected final JMenuItem moveUp = new JMenuItem("Move up");

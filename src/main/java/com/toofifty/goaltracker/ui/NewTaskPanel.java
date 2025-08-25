@@ -4,20 +4,19 @@ import com.toofifty.goaltracker.GoalTrackerPlugin;
 import com.toofifty.goaltracker.models.Goal;
 import com.toofifty.goaltracker.models.task.Task;
 import com.toofifty.goaltracker.ui.components.TextButton;
-import com.toofifty.goaltracker.ui.inputs.ItemTaskInput;
-import com.toofifty.goaltracker.ui.inputs.ManualTaskInput;
-import com.toofifty.goaltracker.ui.inputs.QuestTaskInput;
-import com.toofifty.goaltracker.ui.inputs.SkillLevelTaskInput;
-import com.toofifty.goaltracker.ui.inputs.SkillXpTaskInput;
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.util.function.Consumer;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
+import com.toofifty.goaltracker.ui.inputs.*;
 import net.runelite.client.ui.ColorScheme;
 
-public class NewTaskPanel extends JPanel
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.util.function.Consumer;
+
+/**
+ * Panel for adding new tasks: quick Manual input and expandable options (skills, quests, items).
+ * Toggles a "More options" section and forwards created tasks to a listener.
+ */
+public final class NewTaskPanel extends JPanel
 {
     private final TextButton moreOptionsButton;
     private final GoalTrackerPlugin plugin;

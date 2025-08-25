@@ -1,20 +1,18 @@
 package com.toofifty.goaltracker.ui.components;
 
-import java.awt.Cursor;
-import java.awt.Graphics;
-import java.awt.Insets;
-import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import javax.swing.JButton;
-import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Dimension;
 
-public class ActionBarButton extends JButton
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+/**
+ * Styled small button used inside ActionBar, with hover background effect.
+ */
+public final class ActionBarButton extends JButton
 {
     private boolean hover;
 

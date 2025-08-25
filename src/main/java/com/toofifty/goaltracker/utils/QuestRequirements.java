@@ -5,14 +5,14 @@ import com.toofifty.goaltracker.models.task.SkillLevelTask;
 import com.toofifty.goaltracker.models.task.Task;
 import net.runelite.api.Quest;
 import net.runelite.api.Skill;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-public class QuestRequirements
+import java.util.*;
+
+/**
+ * Static lookup of quest prerequisites (quests + skill levels) and a helper to
+ * expand nested requirements with appropriate indent levels.
+ */
+public final class QuestRequirements
 {
     // Map of quests to their requirements (quests and skills)
     private static final Map<Quest, List<Task>> REQUIREMENT_MAP;

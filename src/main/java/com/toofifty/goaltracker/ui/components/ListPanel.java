@@ -14,7 +14,11 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ListPanel<T> extends JScrollPane implements Refreshable
+/**
+ * Scrollable container that renders and manages a list of items with optional placeholder text.
+ * Supports reordering, removal, and refresh of child panels.
+ */
+public final class ListPanel<T> extends JScrollPane implements Refreshable
 {
     private final JPanel listPanel = new JPanel(new GridBagLayout());
 

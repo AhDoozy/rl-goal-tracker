@@ -14,7 +14,11 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.regex.Pattern;
 
-public class SkillXpTaskInput extends TaskInput
+/**
+ * Input panel for creating Skill XP tasks.
+ * Provides a numeric XP field (supports k/m suffixes, capped at 200m) and a skill dropdown.
+ */
+public final class SkillXpTaskInput extends TaskInput
 {
     private final FlatTextField xpField;
     private final ComboBox<Skill> skillField;

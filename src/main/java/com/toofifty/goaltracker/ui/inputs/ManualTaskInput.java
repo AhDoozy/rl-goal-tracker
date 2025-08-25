@@ -10,7 +10,11 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
-public class ManualTaskInput extends TaskInput
+/**
+ * Input panel for creating simple manual tasks.
+ * Provides a text field with Enter-to-submit behavior.
+ */
+public final class ManualTaskInput extends TaskInput
 {
     private final FlatTextField titleField;
 

@@ -3,6 +3,12 @@ plugins {
     id 'jacoco'
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
 repositories {
     mavenLocal()
     maven {
@@ -11,7 +17,7 @@ repositories {
     mavenCentral()
 }
 
-def runeLiteVersion = 'latest.release'
+def runeLiteVersion = findProperty('rlVersion') ?: 'latest.release'
 
 dependencies {
     compileOnly "net.runelite:client:${runeLiteVersion}"
@@ -33,11 +39,10 @@ dependencies {
 
 group = 'com.toofifty.goaltracker'
 version = '1.0.4'
-sourceCompatibility = '11'
-targetCompatibility = JavaVersion.VERSION_11
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
+    options.release = 11
 }
 
 tasks.test {
@@ -52,4 +57,9 @@ jacocoTestReport {
     reports {
         xml.required = true
     }
+}
+
+tasks.withType(Jar) {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
 }

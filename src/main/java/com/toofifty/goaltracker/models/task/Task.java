@@ -11,10 +11,14 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @SuperBuilder
+/**
+ * Base class for all goal tasks.
+ * Provides status tracking, indent level management, and type identification.
+ */
 public abstract class Task
 {
     @Builder.Default
-    @SerializedName("previous_result")
+    @SerializedName(value = "status", alternate = {"previous_result"})
     private Status status = Status.NOT_STARTED;
 
     @Builder.Default
@@ -56,6 +60,11 @@ public abstract class Task
     public boolean isNotFullyIndented() {
         return !isFullyIndented();
     }
+
+    /**
+     * Returns a human-readable name for the task.
+     */
+    public abstract String getDisplayName();
 
     @Override
     abstract public String toString();

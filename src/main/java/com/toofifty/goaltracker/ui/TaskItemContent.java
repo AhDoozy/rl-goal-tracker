@@ -1,37 +1,32 @@
 package com.toofifty.goaltracker.ui;
 
 import com.toofifty.goaltracker.GoalTrackerPlugin;
+import com.toofifty.goaltracker.models.ActionHistory;
 import com.toofifty.goaltracker.models.Goal;
+import com.toofifty.goaltracker.models.ToggleCompleteAction;
+import com.toofifty.goaltracker.models.enums.Status;
+import com.toofifty.goaltracker.models.task.ManualTask;
 import com.toofifty.goaltracker.models.task.Task;
 import com.toofifty.goaltracker.services.TaskIconService;
-import com.toofifty.goaltracker.models.task.QuestTask;
-import com.toofifty.goaltracker.utils.QuestRequirements;
-import java.util.List;
-import java.util.Locale;
-
-import com.toofifty.goaltracker.ui.components.ListPanel;
 import com.toofifty.goaltracker.ui.components.ListItemPanel;
-import javax.swing.SwingUtilities;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Locale;
 
 import static com.toofifty.goaltracker.utils.Constants.STATUS_TO_COLOR;
 
-import com.toofifty.goaltracker.models.ActionHistory;
-import com.toofifty.goaltracker.models.ToggleCompleteAction;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import com.toofifty.goaltracker.models.enums.Status;
-
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.CardLayout;
-
-import com.toofifty.goaltracker.models.task.ManualTask;
-
-public class TaskItemContent extends JPanel implements Refreshable
+/**
+ * UI component for rendering a single Task row inside a Goal.
+ * Shows icon, title (editable for manual tasks), right-click context menu,
+ * and handles refreshing on task updates.
+ */
+public final class TaskItemContent extends JPanel implements Refreshable
 {
     private final Task task;
     private final Goal goal;
@@ -93,7 +88,7 @@ public class TaskItemContent extends JPanel implements Refreshable
         {
             private void showMenuIfNeeded(MouseEvent e)
             {
-                if (!(e.isPopupTrigger() || javax.swing.SwingUtilities.isRightMouseButton(e)))
+                if (!(e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)))
                 {
                     return;
                 }

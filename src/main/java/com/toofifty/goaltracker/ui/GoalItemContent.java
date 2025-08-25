@@ -1,28 +1,27 @@
 package com.toofifty.goaltracker.ui;
-import net.runelite.client.ui.ColorScheme;
 
 import com.toofifty.goaltracker.GoalTrackerPlugin;
 import com.toofifty.goaltracker.models.Goal;
-
-import com.toofifty.goaltracker.ui.Refreshable;
+import com.toofifty.goaltracker.ui.components.ListItemPanel;
+import net.runelite.client.ui.ColorScheme;
 
 import javax.swing.*;
-import javax.swing.JMenuItem;
-import javax.swing.event.PopupMenuListener;
 import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import java.awt.*;
-
-import com.toofifty.goaltracker.ui.components.ListItemPanel;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import javax.swing.SwingUtilities;
-
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import static com.toofifty.goaltracker.utils.Constants.STATUS_TO_COLOR;
 
-public class GoalItemContent extends JPanel implements Refreshable
+/**
+ * UI component for rendering a Goal in a list.
+ * Shows the title (editable), progress count, and a slim progress bar.
+ * Also supports pinning, context menus, and refresh on goal status change.
+ */
+public final class GoalItemContent extends JPanel implements Refreshable
 {
     private final JLabel titleLabel = new JLabel();
     private final JTextField titleEdit = new JTextField();
@@ -115,15 +114,15 @@ public class GoalItemContent extends JPanel implements Refreshable
                 {
                     return;
                 }
-                java.awt.Component src = (java.awt.Component) e.getSource();
-                javax.swing.JComponent listItem = (javax.swing.JComponent) SwingUtilities.getAncestorOfClass(ListItemPanel.class, src);
+                Component src = (Component) e.getSource();
+                JComponent listItem = (JComponent) SwingUtilities.getAncestorOfClass(ListItemPanel.class, src);
                 if (listItem == null)
                 {
-                    listItem = (javax.swing.JComponent) SwingUtilities.getAncestorOfClass(ListItemPanel.class, GoalItemContent.this);
+                    listItem = (JComponent) SwingUtilities.getAncestorOfClass(ListItemPanel.class, GoalItemContent.this);
                 }
                 if (listItem != null && listItem.getComponentPopupMenu() != null)
                 {
-                    java.awt.Point p = SwingUtilities.convertPoint(src, e.getPoint(), listItem);
+                    Point p = SwingUtilities.convertPoint(src, e.getPoint(), listItem);
                     JPopupMenu menu = listItem.getComponentPopupMenu();
 
                     // --- Pin / Unpin (temporary additions) ---
@@ -151,8 +150,8 @@ public class GoalItemContent extends JPanel implements Refreshable
                         @Override public void popupMenuWillBecomeInvisible(PopupMenuEvent e) { cleanup(menu, this); }
                         private void cleanup(JPopupMenu m, PopupMenuListener self) {
                             // Remove only the components we added this time
-                            java.util.List<java.awt.Component> toRemove = new java.util.ArrayList<>();
-                            for (java.awt.Component c : m.getComponents()) {
+                            java.util.List<Component> toRemove = new java.util.ArrayList<>();
+                            for (Component c : m.getComponents()) {
                                 if (c instanceof JComponent) {
                                     Object flag = ((JComponent) c).getClientProperty("pinToggle");
                                     if (Boolean.TRUE.equals(flag)) {
@@ -160,7 +159,7 @@ public class GoalItemContent extends JPanel implements Refreshable
                                     }
                                 }
                             }
-                            for (java.awt.Component c : toRemove) {
+                            for (Component c : toRemove) {
                                 m.remove(c);
                             }
                             m.removePopupMenuListener(self);
@@ -182,7 +181,7 @@ public class GoalItemContent extends JPanel implements Refreshable
         progress.addMouseListener(forwardPopup);
         progressBar.addMouseListener(forwardPopup);
         // Ensure item icon/text initialize on first render (e.g., on login)
-        javax.swing.SwingUtilities.invokeLater(this::refresh);
+        SwingUtilities.invokeLater(this::refresh);
     }
 
     @Override
@@ -190,7 +189,7 @@ public class GoalItemContent extends JPanel implements Refreshable
     {
         super.addNotify();
         // In case construction happened before UI was realized, refresh when shown
-        javax.swing.SwingUtilities.invokeLater(this::refresh);
+        SwingUtilities.invokeLater(this::refresh);
     }
 
     @Override
@@ -209,7 +208,7 @@ public class GoalItemContent extends JPanel implements Refreshable
         int done = goal.getComplete().size();
         progressBar.setVisible(total > 0);
         progressBar.setProgress(done, total, color);
-        javax.swing.SwingUtilities.invokeLater(this::updateTitleLabel);
+        SwingUtilities.invokeLater(this::updateTitleLabel);
     }
     private static class SlimBar extends JComponent {
         private int done = 0;

@@ -13,25 +13,22 @@ import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.components.FlatTextField;
 
 import javax.swing.*;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.Point;
-import java.awt.KeyboardFocusManager;
-import java.awt.Window;
-import java.util.regex.Pattern;
-import java.awt.Color;
-import javax.swing.JDialog;
-import javax.swing.JButton;
-import java.awt.event.ActionListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
+import java.awt.*;
+import java.awt.event.ActionListener;
+import java.util.regex.Pattern;
 
 
 
-
-public class ItemTaskInput extends TaskInput
+/**
+ * Input panel for creating Item tasks.
+ * Provides search with close overlay, quantity field with k/m suffix support,
+ * and automatic task submission on selection.
+ */
+public final class ItemTaskInput extends TaskInput
 {
     private final ItemManager itemManager;
     private final ClientThread clientThread;
@@ -230,7 +227,7 @@ public class ItemTaskInput extends TaskInput
                 {
                     if (++attempts[0] < maxAttempts)
                     {
-                        new javax.swing.Timer(delayMs, this) {{ setRepeats(false); }}.start();
+                        new Timer(delayMs, this) {{ setRepeats(false); }}.start();
                     }
                     return;
                 }
@@ -254,8 +251,8 @@ public class ItemTaskInput extends TaskInput
                     lastSearchText = "";
                     if (target instanceof JDialog) {
                         ((JDialog) target).dispose();
-                    } else if (target instanceof javax.swing.JFrame) {
-                        ((javax.swing.JFrame) target).dispose();
+                    } else if (target instanceof JFrame) {
+                        ((JFrame) target).dispose();
                     } else {
                         target.dispose();
                     }
@@ -322,7 +319,7 @@ public class ItemTaskInput extends TaskInput
         };
 
         // start first attempt slightly delayed to give the popup time to appear
-        new javax.swing.Timer(delayMs, tryShow) {{ setRepeats(false); }}.start();
+        new Timer(delayMs, tryShow) {{ setRepeats(false); }}.start();
     }
 
     // Try to locate the RuneLite Item Search popup window reliably

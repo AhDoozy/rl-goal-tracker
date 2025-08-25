@@ -6,14 +6,7 @@ import java.util.Objects;
 
 /**
  * Generic undo/redo stack for removed items (e.g., Goals, Tasks).
- *
- * Flow:
- *  - When an item is removed from a list, call {@link #pushRemove(Object, int)}.
- *    This records the item and its original index, and clears the redo stack.
- *  - To undo the removal: call {@link #popForUndo()} and re-insert the item at the
- *    returned index. The entry is moved to the redo stack so it can be re-applied.
- *  - To redo the removal (only valid after an undo): call {@link #popForRedo()} and
- *    remove that item again. The entry moves back to the undo stack.
+ * Stores the removed item and its original index for correct restoration.
  */
 public final class UndoStack<T>
 {

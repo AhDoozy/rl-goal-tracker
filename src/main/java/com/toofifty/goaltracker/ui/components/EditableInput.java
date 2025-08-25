@@ -1,29 +1,25 @@
 package com.toofifty.goaltracker.ui.components;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseListener;
-import java.util.function.Consumer;
-import javax.swing.BorderFactory;
-import javax.swing.JPanel;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.JPopupMenu;
-import javax.swing.JMenuItem;
-import javax.swing.KeyStroke;
-import javax.swing.ActionMap;
-import javax.swing.InputMap;
-import javax.swing.text.DefaultEditorKit;
-import java.awt.Toolkit;
 import lombok.Setter;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.components.FlatTextField;
 
-public class EditableInput extends JPanel
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.text.DefaultEditorKit;
+import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseListener;
+import java.util.function.Consumer;
+
+/**
+ * Editable text field with Save, Cancel, and Edit controls.
+ * Provides copy/paste shortcuts and context menu support.
+ */
+public final class EditableInput extends JPanel
 {
 
     private static final Border INPUT_BOTTOM_BORDER = new CompoundBorder(

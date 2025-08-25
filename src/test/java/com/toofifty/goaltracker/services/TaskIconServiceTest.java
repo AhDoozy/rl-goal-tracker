@@ -1,7 +1,13 @@
 package com.toofifty.goaltracker.services;
 
+import com.toofifty.goaltracker.models.task.Task;
+import com.toofifty.goaltracker.models.task.ManualTask;
+import com.toofifty.goaltracker.models.task.QuestTask;
+import com.toofifty.goaltracker.models.task.SkillLevelTask;
+import com.toofifty.goaltracker.models.task.SkillXpTask;
+import com.toofifty.goaltracker.models.task.ItemTask;
+
 import com.toofifty.goaltracker.models.enums.Status;
-import com.toofifty.goaltracker.models.task.*;
 import net.runelite.api.Client;
 import net.runelite.api.Skill;
 import net.runelite.client.game.ItemManager;

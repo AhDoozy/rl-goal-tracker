@@ -1,12 +1,14 @@
 package com.toofifty.goaltracker.models;
 
-import java.util.List;
 import com.toofifty.goaltracker.models.task.Task;
+
+import java.util.List;
 
 /**
  * Action for indenting or outdenting a task in a list.
+ * Stores old and new indent levels for undo/redo.
  */
-public class IndentChangeAction implements ActionHistory.Action
+public final class IndentChangeAction implements ActionHistory.Action
 {
     private final List<Task> tasks;
     private final Task task;

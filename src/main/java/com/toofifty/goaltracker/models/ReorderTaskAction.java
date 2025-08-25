@@ -6,8 +6,9 @@ import java.util.List;
 
 /**
  * Action for reordering a task within a list (move up/down).
+ * Stores old and new indices for undo/redo.
  */
-public class ReorderTaskAction implements ActionHistory.Action
+public final class ReorderTaskAction implements ActionHistory.Action
 {
     private final List<Task> tasks;
     private final Task task;

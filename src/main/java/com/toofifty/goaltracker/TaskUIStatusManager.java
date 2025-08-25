@@ -11,7 +11,11 @@ import java.util.Map;
 
 @Slf4j
 @Singleton
-public class TaskUIStatusManager
+/**
+ * Keeps track of UI refresh callbacks for tasks and goals.
+ * Ensures updates run on the Swing event dispatch thread.
+ */
+public final class TaskUIStatusManager
 {
     private final Map<Task, Runnable> taskRefreshers = new HashMap<>();
     private final Map<Goal, Runnable> goalRefreshers = new HashMap<>();

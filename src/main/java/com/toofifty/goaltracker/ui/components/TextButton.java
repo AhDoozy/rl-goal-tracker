@@ -1,16 +1,20 @@
 package com.toofifty.goaltracker.ui.components;
 
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.function.Consumer;
-import javax.swing.JLabel;
-import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
-public class TextButton extends JLabel
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.function.Consumer;
+
+/**
+ * Small clickable label styled as a button, used for text-based actions.
+ * Supports hover effects and consumer-based click listeners.
+ */
+public final class TextButton extends JLabel
 {
     private Color mainColor = ColorScheme.PROGRESS_COMPLETE_COLOR;
 

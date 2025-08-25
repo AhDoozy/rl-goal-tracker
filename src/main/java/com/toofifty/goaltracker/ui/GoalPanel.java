@@ -1,31 +1,28 @@
 package com.toofifty.goaltracker.ui;
 
 import com.toofifty.goaltracker.GoalTrackerPlugin;
-import com.toofifty.goaltracker.models.Goal;
 import com.toofifty.goaltracker.models.ActionHistory;
+import com.toofifty.goaltracker.models.Goal;
 import com.toofifty.goaltracker.models.RemoveTaskAction;
 import com.toofifty.goaltracker.models.enums.TaskType;
-import com.toofifty.goaltracker.models.enums.Status;
-import com.toofifty.goaltracker.models.task.ManualTask;
 import com.toofifty.goaltracker.models.task.Task;
-import com.toofifty.goaltracker.ui.components.EditableInput;
-import com.toofifty.goaltracker.ui.components.ListPanel;
-import com.toofifty.goaltracker.ui.components.ListTaskPanel;
-import com.toofifty.goaltracker.ui.components.ActionBar;
-import com.toofifty.goaltracker.ui.components.ActionBarButton;
+import com.toofifty.goaltracker.ui.components.*;
+import net.runelite.client.ui.ColorScheme;
+
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.awt.BorderLayout;
 import java.util.Objects;
 import java.util.function.Consumer;
-import javax.swing.border.EmptyBorder;
-import javax.swing.BorderFactory;
-import net.runelite.client.ui.ColorScheme;
 
-public class GoalPanel extends JPanel implements Refreshable
+/**
+ * Panel showing a single Goal: header, action bar (undo/redo, prereqs),
+ * editable description, and the task list with add-new controls.
+ */
+public final class GoalPanel extends JPanel implements Refreshable
 {
     private final GoalTrackerPlugin plugin;
     private final Goal goal;

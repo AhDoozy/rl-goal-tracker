@@ -3,23 +3,22 @@ package com.toofifty.goaltracker.ui.inputs;
 import com.toofifty.goaltracker.GoalTrackerPlugin;
 import com.toofifty.goaltracker.models.Goal;
 import com.toofifty.goaltracker.models.task.QuestTask;
-import com.toofifty.goaltracker.models.task.Task;
-import com.toofifty.goaltracker.utils.QuestRequirements;
 import com.toofifty.goaltracker.ui.components.ComboBox;
 import net.runelite.api.Quest;
-import net.runelite.client.ui.ColorScheme;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.ArrayList;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 
-public class QuestTaskInput extends TaskInput
+/**
+ * Input panel for creating Quest tasks.
+ * Provides a searchable dropdown with RuneScape UF font and Enter-to-submit support.
+ */
+public final class QuestTaskInput extends TaskInput
 {
     private final List<Quest> allQuests;
     private Quest bestMatch;

@@ -3,7 +3,7 @@ package com.toofifty.goaltracker.models.task;
 import com.toofifty.goaltracker.models.enums.TaskType;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ItemTaskTest {
 

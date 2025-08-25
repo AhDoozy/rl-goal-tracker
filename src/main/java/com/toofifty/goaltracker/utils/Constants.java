@@ -6,7 +6,10 @@ import net.runelite.client.ui.ColorScheme;
 import java.awt.*;
 import java.util.Map;
 
-public class Constants {
+/**
+ * Shared plugin-wide constants (colors, keys, etc.).
+ */
+public final class Constants {
     public static final Map<Status, Color> STATUS_TO_COLOR = Map.of(
             Status.NOT_STARTED, ColorScheme.PROGRESS_ERROR_COLOR,
             Status.IN_PROGRESS, ColorScheme.PROGRESS_INPROGRESS_COLOR,

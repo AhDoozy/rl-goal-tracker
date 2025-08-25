@@ -1,21 +1,24 @@
+
 package com.toofifty.goaltracker.ui.inputs;
 
 import com.toofifty.goaltracker.GoalTrackerPlugin;
 import com.toofifty.goaltracker.models.Goal;
 import com.toofifty.goaltracker.models.task.Task;
 import com.toofifty.goaltracker.ui.components.TextButton;
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 import lombok.Getter;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
-import java.util.function.Consumer;
-import java.util.Collection;
 
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.util.Collection;
+import java.util.function.Consumer;
+
+/**
+ * Abstract base panel for creating new tasks.
+ * Provides a title label, input row, optional Add button, and submit handling.
+ */
 public abstract class TaskInput extends JPanel
 {
     protected final int PREFERRED_INPUT_HEIGHT = 16;

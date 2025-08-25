@@ -1,11 +1,15 @@
 package com.toofifty.goaltracker;
 
-import com.google.common.io.Resources;
+import com.toofifty.goaltracker.models.Goal;
+import com.toofifty.goaltracker.models.task.ManualTask;
+import com.toofifty.goaltracker.models.task.SkillLevelTask;
+import com.toofifty.goaltracker.models.task.SkillXpTask;
+import com.toofifty.goaltracker.models.task.QuestTask;
+import com.toofifty.goaltracker.models.task.ItemTask;
 import com.toofifty.goaltracker.models.enums.Status;
 import com.toofifty.goaltracker.models.enums.TaskType;
-import com.toofifty.goaltracker.models.Goal;
-import com.toofifty.goaltracker.models.task.*;
 import com.toofifty.goaltracker.utils.ReorderableList;
+import com.google.common.io.Resources;
 import net.runelite.api.Quest;
 import net.runelite.api.Skill;
 import org.junit.jupiter.api.Test;
