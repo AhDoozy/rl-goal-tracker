@@ -31,6 +31,7 @@ Please leave for my sanity. thanks :)
 - Task rows updated with consistent styling, icon warming, and inline editing capabilities.
 - Home panel buttons stacked vertically; header divider thickness increased for clarity.
 - Goal card typography fixed with reserved progress text width to prevent clipping.
+- Home panel placeholder updated to use wrapping text; empty text now displays cleanly without clipping.
 
 ### Fixed
 - Fixed chat completion messages: now appear reliably as `GAMEMESSAGE`s with configured colors; raw `<col>` tags removed.

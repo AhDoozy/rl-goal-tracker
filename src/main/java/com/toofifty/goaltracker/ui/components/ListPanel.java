@@ -28,7 +28,7 @@ public final class ListPanel<T> extends JScrollPane implements Refreshable
     private final Map<T, ListItemPanel<T>> itemPanelMap = new HashMap<>();
 
     private int gap = 2;
-    private String placeholder = "Nothing interesting happens.";
+    private JComponent placeholder = new JLabel("Nothing interesting happens.");
     private Consumer<T> updatedListener;
 
     public ListPanel(
@@ -39,15 +39,16 @@ public final class ListPanel<T> extends JScrollPane implements Refreshable
         this.reorderableList = reorderableList;
         this.renderItem = renderItem;
 
-        setBorder(new EmptyBorder(10, 10, 10, 10));
 
         listPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        // Add left/right padding so card content aligns with the header
+        listPanel.setBorder(new EmptyBorder(0, 10, 0, 10));
 
         JPanel wrapperPanel = new JPanel(new BorderLayout());
         wrapperPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         wrapperPanel.add(listPanel, BorderLayout.NORTH);
 
-        setBorder(new EmptyBorder(4, 4, 4 - gap, 4));
+        setBorder(new EmptyBorder(0, 0, 0, 0));
         setBackground(ColorScheme.DARKER_GRAY_COLOR);
         getVerticalScrollBar().setPreferredSize(new Dimension(12, 0));
         getVerticalScrollBar().setBorder(new EmptyBorder(0, 4, 0, 0));
@@ -61,13 +62,19 @@ public final class ListPanel<T> extends JScrollPane implements Refreshable
     public void setGap(int gap)
     {
         this.gap = gap;
-        setBorder(new EmptyBorder(4, 4, 4 - gap, 4));
+        setBorder(new EmptyBorder(0, 0, 0, 0));
         tryBuildList();
     }
 
-    public void setPlaceholder(String placeholder)
+    public void setPlaceholder(String placeholderText)
     {
-        this.placeholder = placeholder;
+        this.placeholder = new JLabel(placeholderText);
+        tryBuildList();
+    }
+
+    public void setPlaceholder(JComponent placeholderComponent)
+    {
+        this.placeholder = placeholderComponent;
         tryBuildList();
     }
 
@@ -128,7 +135,7 @@ public final class ListPanel<T> extends JScrollPane implements Refreshable
         constraints.weightx = 1;
         constraints.gridy = gridy;
         constraints.gridx = 0;
-        constraints.insets = new Insets(0, 0, gap, 0);
+        constraints.insets = new Insets(4, -4, gap, -4);
         return constraints;
     }
 
@@ -149,11 +156,13 @@ public final class ListPanel<T> extends JScrollPane implements Refreshable
         if (reorderableList.isEmpty()) {
             listPanel.removeAll();
 
-            JLabel placeholderLabel = new JLabel(placeholder);
-            placeholderLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+            if (placeholder instanceof JLabel) {
+                ((JLabel) placeholder).setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+            }
             JPanel placeholderPanel = new JPanel();
             placeholderPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-            placeholderPanel.add(placeholderLabel);
+            placeholderPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
+            placeholderPanel.add(placeholder);
             listPanel.add(placeholderPanel, getConstraints());
         } else {
             listPanel.removeAll();

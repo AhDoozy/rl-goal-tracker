@@ -123,13 +123,24 @@ public final class GoalTrackerPanel extends PluginPanel implements Refreshable
 
         goalListPanel = new ListPanel<>(goalManager.getGoals(), (goal) -> {
             var panel = new ListItemPanel<>(goalManager.getGoals(), goal);
-            panel.onClick(e -> this.view(goal));
+            panel.onClick(e -> this.safeView(goal));
             panel.add(new GoalItemContent(plugin, goal));
             panel.onRemovedWithIndex(this::recordGoalRemoval);
             return panel;
         });
         goalListPanel.setGap(0);
-        goalListPanel.setPlaceholder("<html><div style='text-align:center;color:#bfbfbf;padding:8px 0;'>No goals yet.<br/>Click <b>+ Add goal</b> above to create your first one.</div></html>");
+        goalListPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
+        JTextArea placeholder = new JTextArea("No goals yet.\nClick + Add goal above to create your first one.");
+        placeholder.setLineWrap(true);
+        placeholder.setWrapStyleWord(true);
+        placeholder.setEditable(false);
+        placeholder.setOpaque(false);
+        placeholder.setForeground(new Color(0xBFBFBF));
+        placeholder.setFont(FontManager.getRunescapeSmallFont());
+        placeholder.setBorder(new EmptyBorder(8, 0, 8, 0));
+        placeholder.setColumns(30);
+        placeholder.setMaximumSize(new Dimension(Integer.MAX_VALUE, placeholder.getPreferredSize().height));
+        goalListPanel.setPlaceholder(placeholder);
 
         mainPanel.add(headerContainer, BorderLayout.NORTH);
         mainPanel.add(goalListPanel, BorderLayout.CENTER);
@@ -162,6 +173,33 @@ public final class GoalTrackerPanel extends PluginPanel implements Refreshable
         repaint();
     }
 
+    private void safeView(Goal goal)
+    {
+        try
+        {
+            removeAll();
+            this.goalPanel = new GoalPanel(plugin, goal, this::home);
+            this.goalPanel.onGoalUpdated(this.goalUpdatedListener);
+            this.goalPanel.onTaskAdded(this.taskAddedListener);
+            this.goalPanel.onTaskUpdated(this.taskUpdatedListener);
+            add(this.goalPanel, BorderLayout.CENTER);
+            this.goalPanel.refresh();
+            revalidate();
+            repaint();
+        }
+        catch (Throwable t)
+        {
+            // Log to console and show a user-visible error so the panel isn't left blank
+            t.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "Sorry, something went wrong opening that goal. Returning to Home.",
+                "Goal Open Error",
+                JOptionPane.ERROR_MESSAGE);
+            this.goalPanel = null;
+            home();
+        }
+    }
+
     public void home()
     {
         if (pendingNewGoal != null)
@@ -178,7 +216,6 @@ public final class GoalTrackerPanel extends PluginPanel implements Refreshable
         sortGoalsForHome();
         goalListPanel.tryBuildList();
         goalListPanel.refresh();
-        mainPanel.remove(goalListPanel);
         mainPanel.add(goalListPanel, BorderLayout.CENTER);
         add(mainPanel, BorderLayout.CENTER);
         mainPanel.revalidate();

@@ -23,7 +23,7 @@ import static com.toofifty.goaltracker.utils.Constants.STATUS_TO_COLOR;
  */
 public final class GoalItemContent extends JPanel implements Refreshable
 {
-    private final JLabel titleLabel = new JLabel();
+    private final JTextArea titleLabel = new JTextArea();
     private final JTextField titleEdit = new JTextField();
     private final JLabel progress = new JLabel();
     private final SlimBar progressBar = new SlimBar();
@@ -41,7 +41,7 @@ public final class GoalItemContent extends JPanel implements Refreshable
         super(new BorderLayout());
         this.goal = goal;
 
-        setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8)); // padding for centered text
+        setBorder(BorderFactory.createEmptyBorder(6, 0, 6, 0)); // remove extra left/right padding so title can span edge-to-edge within the card body
         // Let the parent card body paint the background; avoid double fills
         setOpaque(false);
         setBackground(null);
@@ -50,10 +50,15 @@ public final class GoalItemContent extends JPanel implements Refreshable
         topRow.setOpaque(false);
 
         // Title label (display mode)
-        titleLabel.setBorder(null);
+        titleLabel.setLineWrap(true);
+        titleLabel.setWrapStyleWord(true);
+        titleLabel.setEditable(false);
         titleLabel.setOpaque(false);
+        titleLabel.setBorder(null);
         titleLabel.setFocusable(false);
-        titleLabel.setToolTipText(null);
+        titleLabel.setFont(getFont());
+        titleLabel.setMinimumSize(new Dimension(0, titleLabel.getPreferredSize().height));
+        titleLabel.setMargin(new Insets(0, 0, 0, 0));
 
         // Title edit (edit mode)
         titleEdit.setBorder(null);
@@ -75,6 +80,8 @@ public final class GoalItemContent extends JPanel implements Refreshable
             @Override public void focusLost(java.awt.event.FocusEvent e) { exitEdit(true); }
         });
 
+        // Place progress at the far right with a small left gap and a yellow border
+        progress.setBorder(new javax.swing.border.EmptyBorder(0, 3, 0, 0));
         topRow.add(progress, BorderLayout.EAST);
 
         // Reserve fixed width for progress like 999/999 so it never clips
@@ -82,7 +89,6 @@ public final class GoalItemContent extends JPanel implements Refreshable
         Dimension progSize = new Dimension(progW, progress.getPreferredSize().height);
         progress.setPreferredSize(progSize);
         progress.setMinimumSize(progSize);
-
         add(topRow, BorderLayout.CENTER);
 
         // Slim custom progress bar under the title row
@@ -243,36 +249,8 @@ public final class GoalItemContent extends JPanel implements Refreshable
     {
         if (topRow == null) return;
         String full = goal.getDescription() != null ? goal.getDescription() : "";
+        titleLabel.setText(full.isBlank() ? " " : full);
         titleLabel.setToolTipText(full.isEmpty() ? null : full);
-
-        // Compute available width for title (row width minus progress preferred width and a small gap)
-        int rowW = topRow.getWidth();
-        if (rowW <= 0) { titleLabel.setText(full); return; }
-        int gap = 8;
-        int avail = Math.max(16, rowW - progress.getPreferredSize().width - gap);
-
-        FontMetrics fm = titleLabel.getFontMetrics(titleLabel.getFont());
-        if (fm.stringWidth(full) <= avail) {
-            titleLabel.setText(full);
-            return;
-        }
-        String ellipsis = "…";
-        String text = full;
-        // Binary-like trim from the end until it fits
-        int lo = 0, hi = full.length();
-        int cut = hi;
-        while (lo <= hi) {
-            int mid = (lo + hi) >>> 1;
-            String candidate = full.substring(0, Math.max(0, mid)) + ellipsis;
-            if (fm.stringWidth(candidate) <= avail) {
-                cut = mid;
-                lo = mid + 1;
-            } else {
-                hi = mid - 1;
-            }
-        }
-        text = full.substring(0, Math.max(0, cut)) + ellipsis;
-        titleLabel.setText(text);
     }
 
     private void enterEdit()

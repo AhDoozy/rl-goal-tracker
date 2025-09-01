@@ -88,6 +88,7 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
         // Create inner card surface to isolate hover/press background changes
         cardBody = new JPanel(new BorderLayout());
         cardBody.setOpaque(true);
+        cardBody.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         // Add the cardBody as the main content area
         super.add(cardBody, BorderLayout.CENTER);
 
@@ -250,20 +251,14 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
 
     private void applyGoalCardDefaultStyle()
     {
-        // Outer spacing + shadow on the container panel
-        setBorder(javax.swing.BorderFactory.createCompoundBorder(
-            new EmptyBorder(8, 6, 8, 6),
-            new MatteBorder(2, 2, 4, 4, new Color(0, 0, 0, 60)) // shadow on all sides
-        ));
+        // Outer spacing only (no colored line border)
+        setBorder(new EmptyBorder(8, 6, 8, 6));
         setBackground(ColorScheme.DARK_GRAY_COLOR); // keep outer area stable
 
         // Inner card face: rounded outline + inner padding
         if (cardBody != null)
         {
-            cardBody.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-                javax.swing.BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR, 1, true),
-                new EmptyBorder(6, 8, 6, 8)
-            ));
+            cardBody.setBorder(new EmptyBorder(4, 6, 4, 6));
             cardBody.setBackground(ColorScheme.DARK_GRAY_COLOR);
         }
     }
