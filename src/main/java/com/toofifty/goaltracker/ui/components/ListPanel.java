@@ -31,6 +31,9 @@ public final class ListPanel<T> extends JScrollPane implements Refreshable
     private JComponent placeholder = new JLabel("Nothing interesting happens.");
     private Consumer<T> updatedListener;
 
+    private int rowLeftInset = 0;
+    private int rowRightInset = 0;
+
     public ListPanel(
         ReorderableList<T> reorderableList,
         Function<T, ListItemPanel<T>> renderItem
@@ -63,6 +66,13 @@ public final class ListPanel<T> extends JScrollPane implements Refreshable
     {
         this.gap = gap;
         setBorder(new EmptyBorder(0, 0, 0, 0));
+        tryBuildList();
+    }
+
+    public void setRowSideInsets(int left, int right)
+    {
+        this.rowLeftInset = Math.max(0, left);
+        this.rowRightInset = Math.max(0, right);
         tryBuildList();
     }
 
@@ -135,7 +145,7 @@ public final class ListPanel<T> extends JScrollPane implements Refreshable
         constraints.weightx = 1;
         constraints.gridy = gridy;
         constraints.gridx = 0;
-        constraints.insets = new Insets(4, -4, gap, -4);
+        constraints.insets = new Insets(4, rowLeftInset, gap, rowRightInset);
         return constraints;
     }
 
@@ -153,6 +163,8 @@ public final class ListPanel<T> extends JScrollPane implements Refreshable
      */
     public void tryBuildList()
     {
+        itemPanelMap.clear();
+
         if (reorderableList.isEmpty()) {
             listPanel.removeAll();
 

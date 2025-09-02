@@ -28,6 +28,8 @@ import static com.toofifty.goaltracker.utils.Constants.STATUS_TO_COLOR;
  */
 public final class TaskItemContent extends JPanel implements Refreshable
 {
+    private static final int INDENT_PER_LEVEL = 12; // pixels per indent level
+
     private final Task task;
     private final Goal goal;
     private final TaskIconService iconService;
@@ -145,9 +147,15 @@ public final class TaskItemContent extends JPanel implements Refreshable
         titleLabel.setForeground(STATUS_TO_COLOR.get(task.getStatus()));
         updateTitleLabel();
 
-        int indent = 16 * task.getIndentLevel();
+        int level = Math.max(0, task.getIndentLevel());
+        // Shift rendering so level 0 = 0px, level 1 = 0px, level 2 = 12px, etc.
+        // This avoids the first child appearing with an extra indent when prereqs are added.
+        int indent = (level <= 1) ? 0 : (level - 1) * INDENT_PER_LEVEL;
+
         iconLabel.setIcon(iconService.get(task));
-        iconLabel.setBorder(new EmptyBorder(0, indent, 0, 0));
+        // Apply indent to the wrapper instead of the label to avoid double padding
+        iconLabel.setBorder(new EmptyBorder(0, 0, 0, 0));
+        iconWrapper.setBorder(new EmptyBorder(4, indent, 0, 4));
 
         revalidate();
     }
