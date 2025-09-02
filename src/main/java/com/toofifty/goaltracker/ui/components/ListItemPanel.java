@@ -109,21 +109,25 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
         moveUp.addActionListener(e -> {
             list.moveUp(item);
             if (this.reorderedListener != null) this.reorderedListener.accept(item);
+            requestContainerRefresh();
         });
 
         moveDown.addActionListener(e -> {
             list.moveDown(item);
             if (this.reorderedListener != null) this.reorderedListener.accept(item);
+            requestContainerRefresh();
         });
 
         moveToTop.addActionListener(e -> {
             list.moveToTop(item);
             if (this.reorderedListener != null) this.reorderedListener.accept(item);
+            requestContainerRefresh();
         });
 
         moveToBottom.addActionListener(e -> {
             list.moveToBottom(item);
             if (this.reorderedListener != null) this.reorderedListener.accept(item);
+            requestContainerRefresh();
         });
 
         removeItem.addActionListener(e -> {
@@ -276,6 +280,23 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
         this.removedWithIndexListener = removeListener;
     }
 
+    private void requestContainerRefresh()
+    {
+        java.awt.Container p = getParent();
+        while (p != null)
+        {
+            if (p instanceof com.toofifty.goaltracker.ui.GoalTrackerPanel)
+            {
+                ((com.toofifty.goaltracker.ui.GoalTrackerPanel) p).refresh();
+                return;
+            }
+            p = p.getParent();
+        }
+        // Fallback if no GoalTrackerPanel ancestor is found
+        revalidate();
+        repaint();
+    }
+
     private void applyBaseBorderWithOptionalTan()
     {
         // Outer panel: keep spacing constant
@@ -394,17 +415,39 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
     {
         if (item instanceof Goal)
         {
+            Goal goal = (Goal) item;
+            JMenuItem pinToggle = new JMenuItem(goal.isPinned() ? "Unpin goal" : "Pin goal");
+            pinToggle.addActionListener(e -> {
+                // Toggle pin state
+                boolean nowPinned = !goal.isPinned();
+                goal.setPinned(nowPinned);
+
+                // Reorder this item in the visible list immediately so it moves without waiting on a rebuild
+                try {
+                    if (nowPinned) {
+                        list.moveToTop(item);
+                    } else {
+                        list.moveToBottom(item);
+                    }
+                } catch (Throwable ignore) {
+                    // If list doesn't support it for some reason, we still continue with refresh
+                }
+
+                // Refresh this card and ask the container to repaint/rebuild
+                refresh();
+                requestContainerRefresh();
+            });
+            popupMenu.add(pinToggle);
+
             JMenuItem markAllComplete = new JMenuItem("Mark all as completed");
             JMenuItem markAllIncomplete = new JMenuItem("Mark all as incomplete");
 
             markAllComplete.addActionListener(e -> {
-                Goal goal = (Goal) item;
                 goal.setAllTasksCompleted(true);
                 refresh();
             });
 
             markAllIncomplete.addActionListener(e -> {
-                Goal goal = (Goal) item;
                 goal.setAllTasksCompleted(false);
                 refresh();
             });

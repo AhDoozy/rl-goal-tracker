@@ -278,13 +278,10 @@ public final class GoalTrackerPanel extends PluginPanel implements Refreshable
 
     private void sortGoalsForHome()
     {
+        // Keep pinned goals first, but do NOT alphabetize within groups.
+        // Collections.sort is stable (TimSort), so existing manual order is preserved within each group.
         java.util.List<Goal> goals = goalManager.getGoals();
-        Collections.sort(goals, Comparator
-                .comparing(Goal::isPinned).reversed()
-                .thenComparing(g -> {
-                    String d = g.getDescription();
-                    return d == null ? "" : d.toLowerCase();
-                }));
+        Collections.sort(goals, Comparator.comparing(Goal::isPinned).reversed());
     }
 
     private void doUndo()
@@ -353,6 +350,22 @@ public final class GoalTrackerPanel extends PluginPanel implements Refreshable
         {
             file = new java.io.File(file.getParentFile(), file.getName() + ".json");
         }
+        // Confirm overwrite if file already exists
+        if (file.exists())
+        {
+            int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "File already exists:\n" + file.getAbsolutePath() + "\n\nOverwrite it?",
+                "Confirm Overwrite",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+            );
+            if (confirm != JOptionPane.YES_OPTION)
+            {
+                return; // user chose not to overwrite
+            }
+        }
+
         try (java.io.FileWriter fw = new java.io.FileWriter(file))
         {
             String json = goalManager.exportJson(true);
@@ -379,8 +392,28 @@ public final class GoalTrackerPanel extends PluginPanel implements Refreshable
         try
         {
             String json = new String(java.nio.file.Files.readAllBytes(file.toPath()));
-            goalManager.importJson(json);
+
+            Object[] options = {"Overwrite", "Merge", "Cancel"};
+            int choice = JOptionPane.showOptionDialog(
+                this,
+                "Importing will change your current goals.\nDo you want to overwrite existing goals or merge with them?",
+                "Import Goals",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[2]
+            );
+
+            if (choice == JOptionPane.CANCEL_OPTION || choice == JOptionPane.CLOSED_OPTION)
+            {
+                return; // user canceled
+            }
+
+            boolean overwrite = (choice == JOptionPane.YES_OPTION);
+            goalManager.importJson(json, overwrite);
             plugin.warmItemIcons();
+
             if (goalPanel != null) {
                 home();
             } else {
@@ -389,6 +422,7 @@ public final class GoalTrackerPanel extends PluginPanel implements Refreshable
                 revalidate();
                 repaint();
             }
+
             JOptionPane.showMessageDialog(this, "Imported goals from\n" + file.getAbsolutePath(), "Import Complete", JOptionPane.INFORMATION_MESSAGE);
         }
         catch (Exception ex)

@@ -69,6 +69,43 @@ public final class GoalPanel extends JPanel implements Refreshable
         actionBar.left().add(undoButton);
         actionBar.left().add(redoButton);
 
+        ActionBarButton importButton = new ActionBarButton("Import", () -> {
+            String input = javax.swing.JOptionPane.showInputDialog(GoalPanel.this, "Paste goals JSON:");
+            if (input == null) {
+                return; // canceled
+            }
+            input = input.trim();
+            if (input.isEmpty()) {
+                return; // nothing to import
+            }
+
+            Object[] options = {"Overwrite", "Merge", "Cancel"};
+            int choice = javax.swing.JOptionPane.showOptionDialog(
+                GoalPanel.this,
+                "Importing will change your current goals.\nDo you want to overwrite existing goals or merge with them?",
+                "Import Goals",
+                javax.swing.JOptionPane.YES_NO_CANCEL_OPTION,
+                javax.swing.JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[2]
+            );
+
+            if (choice == javax.swing.JOptionPane.YES_OPTION) {
+                plugin.getGoalManager().importJson(input, true);   // Overwrite
+            } else if (choice == javax.swing.JOptionPane.NO_OPTION) {
+                plugin.getGoalManager().importJson(input, false);  // Merge
+            } else {
+                return; // canceled
+            }
+
+            // Refresh current view after import
+            plugin.setValidateAll(true);
+            plugin.getUiStatusManager().refresh(goal);
+            refreshTaskList();
+        });
+        actionBar.left().add(importButton);
+
         // Stack back row above the action bar in the header's NORTH
         JPanel headerTop = new JPanel();
         headerTop.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -106,7 +143,7 @@ public final class GoalPanel extends JPanel implements Refreshable
                 taskPanel.setOpaque(true);
                 taskPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
                 taskPanel.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createMatteBorder(4, 6, 0, 6, ColorScheme.DARKER_GRAY_COLOR), // darker line for contrast
+                    BorderFactory.createMatteBorder(1, 6, 0, 6, ColorScheme.DARKER_GRAY_COLOR), // thinner divider
                     new EmptyBorder(2, 4, 2, 4)
                 ));
 

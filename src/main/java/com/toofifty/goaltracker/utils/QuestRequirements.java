@@ -215,6 +215,21 @@ public final class QuestRequirements
         );
 
         REQUIREMENT_MAP.put(
+                Quest.THE_PATH_OF_GLOUPHRIE,
+                Arrays.asList(
+                        QuestTask.builder().quest(Quest.WATERFALL_QUEST).build(),
+                        QuestTask.builder().quest(Quest.THE_EYES_OF_GLOUPHRIE).build(),
+                        QuestTask.builder().quest(Quest.TREE_GNOME_VILLAGE).build(),
+                        QuestTask.builder().quest(Quest.THE_GRAND_TREE).build(),
+                        SkillLevelTask.builder().skill(Skill.STRENGTH).level(60).build(),
+                        SkillLevelTask.builder().skill(Skill.SLAYER).level(56).build(),
+                        SkillLevelTask.builder().skill(Skill.THIEVING).level(56).build(),
+                        SkillLevelTask.builder().skill(Skill.RANGED).level(47).build(),
+                        SkillLevelTask.builder().skill(Skill.AGILITY).level(45).build()
+                )
+        );
+
+        REQUIREMENT_MAP.put(
                 Quest.THE_FEUD,
                 Arrays.asList(
                         SkillLevelTask.builder().skill(Skill.THIEVING).level(30).build()

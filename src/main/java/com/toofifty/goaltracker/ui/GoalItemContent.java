@@ -65,14 +65,31 @@ public final class GoalItemContent extends JPanel implements Refreshable
         titleEdit.setOpaque(false);
         titleEdit.setDragEnabled(true);
 
+        // Constrain edit field so it never expands the card width
+        titleEdit.setColumns(1); // keep preferred width minimal; BorderLayout will stretch it as needed
+        int editH = titleEdit.getPreferredSize().height;
+        titleEdit.setMinimumSize(new Dimension(0, editH));
+        titleEdit.setPreferredSize(new Dimension(10, editH)); // tiny preferred width; parent determines real width
+        // ESC cancels rename without saving
+        InputMap im = titleEdit.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap am = titleEdit.getActionMap();
+        im.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_ESCAPE, 0), "gt.cancelEdit");
+        am.put("gt.cancelEdit", new AbstractAction() {
+            @Override public void actionPerformed(java.awt.event.ActionEvent e) { exitEdit(false); }
+        });
+
         titleStack.setOpaque(false);
         titleStack.add(titleLabel, "label");
         titleStack.add(titleEdit, "edit");
         topRow.add(titleStack, BorderLayout.CENTER);
 
-        // Swap to edit on label click
+        // Swap to edit only on LEFT double‑click (not on right‑click)
         titleLabel.addMouseListener(new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) { enterEdit(); }
+            @Override public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e) && e.getClickCount() == 2) {
+                    enterEdit();
+                }
+            }
         });
         // Commit edits on Enter and when focus is lost
         titleEdit.addActionListener(e -> exitEdit(true));
@@ -116,7 +133,7 @@ public final class GoalItemContent extends JPanel implements Refreshable
         {
             private void maybeShow(MouseEvent e)
             {
-                if (!(e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)))
+                if (!e.isPopupTrigger())
                 {
                     return;
                 }
@@ -131,24 +148,10 @@ public final class GoalItemContent extends JPanel implements Refreshable
                     Point p = SwingUtilities.convertPoint(src, e.getPoint(), listItem);
                     JPopupMenu menu = listItem.getComponentPopupMenu();
 
-                    // --- Pin / Unpin (temporary additions) ---
-                    JSeparator sep = new JSeparator();
-                    ((JComponent) sep).putClientProperty("pinToggle", Boolean.TRUE);
-                    menu.add(sep);
-
-                    JMenuItem pinToggle = new JMenuItem(goal.isPinned() ? "Unpin" : "Pin");
-                    ((JComponent) pinToggle).putClientProperty("pinToggle", Boolean.TRUE);
-                    pinToggle.addActionListener(ev -> {
-                        goal.setPinned(!goal.isPinned());
-                        try {
-                            plugin.getGoalManager().save();
-                        } catch (Throwable t) {
-                            plugin.getUiStatusManager().refresh(goal);
-                        }
-                        GoalItemContent.this.revalidate();
-                        GoalItemContent.this.repaint();
-                    });
-                    menu.add(pinToggle);
+                    JMenuItem rename = new JMenuItem("Rename");
+                    ((JComponent) rename).putClientProperty("pinToggle", Boolean.TRUE); // reuse cleanup flag
+                    rename.addActionListener(ev -> enterEdit());
+                    menu.add(rename);
 
                     PopupMenuListener cleanup = new PopupMenuListener() {
                         @Override public void popupMenuWillBecomeVisible(PopupMenuEvent e) { }

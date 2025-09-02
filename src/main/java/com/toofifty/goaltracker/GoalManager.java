@@ -102,14 +102,25 @@ public final class GoalManager
         return goalSerializer.serialize(goals, pretty);
     }
 
-    /**
-     * Import goals from JSON and persist them.
-     */
     public void importJson(String json)
+    {
+        // Backwards-compatible default: overwrite existing goals
+        importJson(json, true);
+    }
+
+    /**
+     * Import goals from JSON, optionally merging with existing goals.
+     * @param json the JSON payload
+     * @param overwrite if true, clears existing goals first; if false, appends imported goals
+     */
+    public void importJson(String json, boolean overwrite)
     {
         try
         {
-            this.goals.clear();
+            if (overwrite)
+            {
+                this.goals.clear();
+            }
             this.goals.addAll(goalSerializer.deserialize(json));
             save();
         }
