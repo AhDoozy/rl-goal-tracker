@@ -23,7 +23,7 @@ import static com.toofifty.goaltracker.utils.Constants.STATUS_TO_COLOR;
  */
 public final class GoalItemContent extends JPanel implements Refreshable
 {
-    private final JLabel titleLabel = new JLabel();
+    private final JTextArea titleLabel = new JTextArea();
     private final JTextField titleEdit = new JTextField();
     private final JLabel progress = new JLabel();
     private final SlimBar progressBar = new SlimBar();
@@ -41,7 +41,7 @@ public final class GoalItemContent extends JPanel implements Refreshable
         super(new BorderLayout());
         this.goal = goal;
 
-        setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8)); // padding for centered text
+        setBorder(BorderFactory.createEmptyBorder(6, 0, 6, 0)); // remove extra left/right padding so title can span edge-to-edge within the card body
         // Let the parent card body paint the background; avoid double fills
         setOpaque(false);
         setBackground(null);
@@ -50,24 +50,46 @@ public final class GoalItemContent extends JPanel implements Refreshable
         topRow.setOpaque(false);
 
         // Title label (display mode)
-        titleLabel.setBorder(null);
+        titleLabel.setLineWrap(true);
+        titleLabel.setWrapStyleWord(true);
+        titleLabel.setEditable(false);
         titleLabel.setOpaque(false);
+        titleLabel.setBorder(null);
         titleLabel.setFocusable(false);
-        titleLabel.setToolTipText(null);
+        titleLabel.setFont(getFont());
+        titleLabel.setMinimumSize(new Dimension(0, titleLabel.getPreferredSize().height));
+        titleLabel.setMargin(new Insets(0, 0, 0, 0));
 
         // Title edit (edit mode)
         titleEdit.setBorder(null);
         titleEdit.setOpaque(false);
         titleEdit.setDragEnabled(true);
 
+        // Constrain edit field so it never expands the card width
+        titleEdit.setColumns(1); // keep preferred width minimal; BorderLayout will stretch it as needed
+        int editH = titleEdit.getPreferredSize().height;
+        titleEdit.setMinimumSize(new Dimension(0, editH));
+        titleEdit.setPreferredSize(new Dimension(10, editH)); // tiny preferred width; parent determines real width
+        // ESC cancels rename without saving
+        InputMap im = titleEdit.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap am = titleEdit.getActionMap();
+        im.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_ESCAPE, 0), "gt.cancelEdit");
+        am.put("gt.cancelEdit", new AbstractAction() {
+            @Override public void actionPerformed(java.awt.event.ActionEvent e) { exitEdit(false); }
+        });
+
         titleStack.setOpaque(false);
         titleStack.add(titleLabel, "label");
         titleStack.add(titleEdit, "edit");
         topRow.add(titleStack, BorderLayout.CENTER);
 
-        // Swap to edit on label click
+        // Swap to edit only on LEFT double‑click (not on right‑click)
         titleLabel.addMouseListener(new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) { enterEdit(); }
+            @Override public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e) && e.getClickCount() == 2) {
+                    enterEdit();
+                }
+            }
         });
         // Commit edits on Enter and when focus is lost
         titleEdit.addActionListener(e -> exitEdit(true));
@@ -75,6 +97,8 @@ public final class GoalItemContent extends JPanel implements Refreshable
             @Override public void focusLost(java.awt.event.FocusEvent e) { exitEdit(true); }
         });
 
+        // Place progress at the far right with a small left gap and a yellow border
+        progress.setBorder(new javax.swing.border.EmptyBorder(0, 3, 0, 0));
         topRow.add(progress, BorderLayout.EAST);
 
         // Reserve fixed width for progress like 999/999 so it never clips
@@ -82,7 +106,6 @@ public final class GoalItemContent extends JPanel implements Refreshable
         Dimension progSize = new Dimension(progW, progress.getPreferredSize().height);
         progress.setPreferredSize(progSize);
         progress.setMinimumSize(progSize);
-
         add(topRow, BorderLayout.CENTER);
 
         // Slim custom progress bar under the title row
@@ -110,7 +133,7 @@ public final class GoalItemContent extends JPanel implements Refreshable
         {
             private void maybeShow(MouseEvent e)
             {
-                if (!(e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)))
+                if (!e.isPopupTrigger())
                 {
                     return;
                 }
@@ -125,24 +148,10 @@ public final class GoalItemContent extends JPanel implements Refreshable
                     Point p = SwingUtilities.convertPoint(src, e.getPoint(), listItem);
                     JPopupMenu menu = listItem.getComponentPopupMenu();
 
-                    // --- Pin / Unpin (temporary additions) ---
-                    JSeparator sep = new JSeparator();
-                    ((JComponent) sep).putClientProperty("pinToggle", Boolean.TRUE);
-                    menu.add(sep);
-
-                    JMenuItem pinToggle = new JMenuItem(goal.isPinned() ? "Unpin" : "Pin");
-                    ((JComponent) pinToggle).putClientProperty("pinToggle", Boolean.TRUE);
-                    pinToggle.addActionListener(ev -> {
-                        goal.setPinned(!goal.isPinned());
-                        try {
-                            plugin.getGoalManager().save();
-                        } catch (Throwable t) {
-                            plugin.getUiStatusManager().refresh(goal);
-                        }
-                        GoalItemContent.this.revalidate();
-                        GoalItemContent.this.repaint();
-                    });
-                    menu.add(pinToggle);
+                    JMenuItem rename = new JMenuItem("Rename");
+                    ((JComponent) rename).putClientProperty("pinToggle", Boolean.TRUE); // reuse cleanup flag
+                    rename.addActionListener(ev -> enterEdit());
+                    menu.add(rename);
 
                     PopupMenuListener cleanup = new PopupMenuListener() {
                         @Override public void popupMenuWillBecomeVisible(PopupMenuEvent e) { }
@@ -243,36 +252,8 @@ public final class GoalItemContent extends JPanel implements Refreshable
     {
         if (topRow == null) return;
         String full = goal.getDescription() != null ? goal.getDescription() : "";
+        titleLabel.setText(full.isBlank() ? " " : full);
         titleLabel.setToolTipText(full.isEmpty() ? null : full);
-
-        // Compute available width for title (row width minus progress preferred width and a small gap)
-        int rowW = topRow.getWidth();
-        if (rowW <= 0) { titleLabel.setText(full); return; }
-        int gap = 8;
-        int avail = Math.max(16, rowW - progress.getPreferredSize().width - gap);
-
-        FontMetrics fm = titleLabel.getFontMetrics(titleLabel.getFont());
-        if (fm.stringWidth(full) <= avail) {
-            titleLabel.setText(full);
-            return;
-        }
-        String ellipsis = "…";
-        String text = full;
-        // Binary-like trim from the end until it fits
-        int lo = 0, hi = full.length();
-        int cut = hi;
-        while (lo <= hi) {
-            int mid = (lo + hi) >>> 1;
-            String candidate = full.substring(0, Math.max(0, mid)) + ellipsis;
-            if (fm.stringWidth(candidate) <= avail) {
-                cut = mid;
-                lo = mid + 1;
-            } else {
-                hi = mid - 1;
-            }
-        }
-        text = full.substring(0, Math.max(0, cut)) + ellipsis;
-        titleLabel.setText(text);
     }
 
     private void enterEdit()

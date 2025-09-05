@@ -14,7 +14,7 @@ Please leave for my sanity. thanks :)
 - Manual completion toggling for preset tasks.
 - Configurable color setting for completion chat messages.
 - Export and import goals to JSON with file filtering and full UI refresh.
-- Preset Goal Lists with an “Add from Preset…” button (including Quest Cape, Ironman progressions, Void, F2P, Fast Travel, etc.).
+- Preset Goal Lists with an “Add from Preset…” button.
 - Full Void Armor, Free-to-Play Quests, and Fast Travel Unlocks presets.
 - Expanded and reworked Early, Mid, and Late Ironman presets.
 - Inline editing support for goal titles and manual task descriptions.
@@ -31,6 +31,10 @@ Please leave for my sanity. thanks :)
 - Task rows updated with consistent styling, icon warming, and inline editing capabilities.
 - Home panel buttons stacked vertically; header divider thickness increased for clarity.
 - Goal card typography fixed with reserved progress text width to prevent clipping.
+- Home panel placeholder updated to use wrapping text; empty text now displays cleanly without clipping.
+- Export to file now prompts before overwriting existing files.
+- Import from file now prompts with Overwrite / Merge / Cancel options instead of silently replacing goals.
+- Home panel no longer forces alphabetical order; manual Move actions now persist with pinned-first grouping only.
 
 ### Fixed
 - Fixed chat completion messages: now appear reliably as `GAMEMESSAGE`s with configured colors; raw `<col>` tags removed.
@@ -44,3 +48,9 @@ Please leave for my sanity. thanks :)
 - Fixed empty goals remaining in list; now automatically removed if left without tasks.
 - Fixed overlapping Export button layout issue.
 - Fixed quest tasks not showing correct status on login until entering the goal.
+- Fixed card rename editor stretching beyond panel width; editor now constrained to card body.
+- Fixed inconsistent rename activation; description text is read-only unless rename explicitly invoked.
+- Added right-click Rename option with bounded editor, commit/cancel, and ESC cancel support.
+- Fixed duplicate Pin/Unpin menu items by centralizing handling in ListItemPanel.
+- Fixed unpinning a card not refreshing the Home panel immediately; Home panel now rebuilds/reorders on pin state toggle.
+- Fixed Move right-click options (Up/Down/Top/Bottom) not changing card position; moves now reorder cards properly.

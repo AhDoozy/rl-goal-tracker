@@ -6,6 +6,7 @@ import com.toofifty.goaltracker.utils.ReorderableList;
 import net.runelite.client.ui.ColorScheme;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
@@ -20,6 +21,13 @@ import java.util.function.Consumer;
  */
 public class ListItemPanel<T> extends JPanel implements Refreshable
 {
+    private static final int BASE_TOP = 8, BASE_LEFT = 6, BASE_BOTTOM = 8, BASE_RIGHT = 6;
+    private static final int TAN_THICKNESS = 1;
+    private static final int INNER_TOP = 4, INNER_LEFT = 6, INNER_BOTTOM = 4, INNER_RIGHT = 6;
+
+    private static final Border UNPINNED_BORDER = new EmptyBorder(BASE_TOP, BASE_LEFT, BASE_BOTTOM, BASE_RIGHT);
+    private static final Border PINNED_BORDER = new MatteBorder(TAN_THICKNESS, TAN_THICKNESS, TAN_THICKNESS, TAN_THICKNESS, new Color(210, 180, 140));
+
     protected final JMenuItem moveUp = new JMenuItem("Move up");
     protected final JMenuItem moveDown = new JMenuItem("Move down");
     protected final JMenuItem moveToTop = new JMenuItem("Move to top");
@@ -68,11 +76,10 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
     {
         private void maybeShow(MouseEvent e)
         {
-            if (!(e.isPopupTrigger() || javax.swing.SwingUtilities.isRightMouseButton(e)))
+            if (e.isPopupTrigger())
             {
-                return;
+                popupMenu.show((Component) e.getSource(), e.getX(), e.getY());
             }
-            popupMenu.show((Component) e.getSource(), e.getX(), e.getY());
         }
 
         @Override public void mousePressed(MouseEvent e) { maybeShow(e); }
@@ -88,6 +95,7 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
         // Create inner card surface to isolate hover/press background changes
         cardBody = new JPanel(new BorderLayout());
         cardBody.setOpaque(true);
+        cardBody.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         // Add the cardBody as the main content area
         super.add(cardBody, BorderLayout.CENTER);
 
@@ -101,21 +109,25 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
         moveUp.addActionListener(e -> {
             list.moveUp(item);
             if (this.reorderedListener != null) this.reorderedListener.accept(item);
+            requestContainerRefresh();
         });
 
         moveDown.addActionListener(e -> {
             list.moveDown(item);
             if (this.reorderedListener != null) this.reorderedListener.accept(item);
+            requestContainerRefresh();
         });
 
         moveToTop.addActionListener(e -> {
             list.moveToTop(item);
             if (this.reorderedListener != null) this.reorderedListener.accept(item);
+            requestContainerRefresh();
         });
 
         moveToBottom.addActionListener(e -> {
             list.moveToBottom(item);
             if (this.reorderedListener != null) this.reorderedListener.accept(item);
+            requestContainerRefresh();
         });
 
         removeItem.addActionListener(e -> {
@@ -126,13 +138,28 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
         });
 
         popupMenu.setBorder(new EmptyBorder(5, 5, 5, 5));
-
+        cardBody.setComponentPopupMenu(popupMenu);
         setComponentPopupMenu(popupMenu);
         // Also show context menu on press/release to handle platform differences
-        this.addMouseListener(contextMenuListener);
+        // this.addMouseListener(contextMenuListener); // Removed to avoid duplicate popup invocations
         // Ensure popup and click listeners cover all descendants initially
-        addContextMenuListenerRecursive(this);
+        // addContextMenuListenerRecursive(this); // Removed to avoid multiple menus
+
         setOpaque(true);
+
+        // Attach context-menu and click listeners automatically to any components added later inside the card
+        cardBody.addContainerListener(new java.awt.event.ContainerAdapter() {
+            @Override
+            public void componentAdded(java.awt.event.ContainerEvent e) {
+                java.awt.Component child = e.getChild();
+                if (child instanceof JComponent) {
+                    ((JComponent) child).setComponentPopupMenu(popupMenu);
+                }
+                if (clickListenerAdapter != null) {
+                    addClickListenerRecursive(child);
+                }
+            }
+        });
     }
 
     @Override
@@ -145,8 +172,9 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
             if (comp instanceof JComponent)
             {
                 ((JComponent) comp).setBorder(new EmptyBorder(0, 0, 0, 0));
+                ((JComponent) comp).setComponentPopupMenu(popupMenu);
             }
-            addContextMenuListenerRecursive(comp);
+            // addContextMenuListenerRecursive(comp);
             if (clickListenerAdapter != null) addClickListenerRecursive(comp);
             return;
         }
@@ -162,8 +190,9 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
             if (comp instanceof JComponent)
             {
                 ((JComponent) comp).setBorder(new EmptyBorder(0, 0, 0, 0));
+                ((JComponent) comp).setComponentPopupMenu(popupMenu);
             }
-            addContextMenuListenerRecursive(comp);
+            // addContextMenuListenerRecursive(comp);
             if (clickListenerAdapter != null) addClickListenerRecursive(comp);
             return comp;
         }
@@ -178,7 +207,10 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
         {
             ((JComponent) comp).setBorder(new EmptyBorder(0, 0, 0, 0));
         }
-        addContextMenuListenerRecursive(comp);
+        if (comp instanceof JComponent) {
+            ((JComponent) comp).setComponentPopupMenu(popupMenu);
+        }
+        // addContextMenuListenerRecursive(comp);
         if (clickListenerAdapter != null) addClickListenerRecursive(comp);
         return this;
     }
@@ -248,36 +280,80 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
         this.removedWithIndexListener = removeListener;
     }
 
+    private void requestContainerRefresh()
+    {
+        java.awt.Container p = getParent();
+        while (p != null)
+        {
+            if (p instanceof com.toofifty.goaltracker.ui.GoalTrackerPanel)
+            {
+                ((com.toofifty.goaltracker.ui.GoalTrackerPanel) p).refresh();
+                return;
+            }
+            p = p.getParent();
+        }
+        // Fallback if no GoalTrackerPanel ancestor is found
+        revalidate();
+        repaint();
+    }
+
+    private void applyBaseBorderWithOptionalTan()
+    {
+        // Outer panel: keep spacing constant
+        setBorder(UNPINNED_BORDER);
+
+        if (cardBody == null)
+        {
+            return;
+        }
+
+        // Ensure the inner content always has consistent padding
+        cardBody.setBorder(new EmptyBorder(INNER_TOP, INNER_LEFT, INNER_BOTTOM, INNER_RIGHT));
+
+        if (item instanceof Goal && ((Goal) item).isPinned())
+        {
+            // Apply tan to the OUTER card border; keep total insets stable
+            int top = Math.max(0, BASE_TOP - TAN_THICKNESS);
+            int left = Math.max(0, BASE_LEFT - TAN_THICKNESS);
+            int bottom = Math.max(0, BASE_BOTTOM - TAN_THICKNESS);
+            int right = Math.max(0, BASE_RIGHT - TAN_THICKNESS);
+            Border inner = new EmptyBorder(top, left, bottom, right);
+            Color tan = new Color(210, 180, 140);
+            setBorder(BorderFactory.createCompoundBorder(
+                new MatteBorder(TAN_THICKNESS, TAN_THICKNESS, TAN_THICKNESS, TAN_THICKNESS, tan),
+                inner
+            ));
+        }
+        // else: leave UNPINNED_BORDER already applied above
+    }
+
     private void applyGoalCardDefaultStyle()
     {
-        // Outer spacing + shadow on the container panel
-        setBorder(javax.swing.BorderFactory.createCompoundBorder(
-            new EmptyBorder(8, 6, 8, 6),
-            new MatteBorder(2, 2, 4, 4, new Color(0, 0, 0, 60)) // shadow on all sides
-        ));
-        setBackground(ColorScheme.DARK_GRAY_COLOR); // keep outer area stable
+        // Borders
+        applyBaseBorderWithOptionalTan();
 
-        // Inner card face: rounded outline + inner padding
+        // Backgrounds
+        setBackground(ColorScheme.DARK_GRAY_COLOR); // keep outer area stable
         if (cardBody != null)
         {
-            cardBody.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-                javax.swing.BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR, 1, true),
-                new EmptyBorder(6, 8, 6, 8)
-            ));
             cardBody.setBackground(ColorScheme.DARK_GRAY_COLOR);
         }
     }
 
     private void applyGoalCardHoverStyle()
     {
+        // Keep borders as set by applyBaseBorderWithOptionalTan();
+        applyBaseBorderWithOptionalTan();
         if (cardBody != null)
         {
-            cardBody.setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
+            cardBody.setBackground(ColorScheme.DARKER_GRAY_HOVER_COLOR);
         }
     }
 
     private void applyGoalCardPressedStyle()
     {
+        // Keep borders as set by applyBaseBorderWithOptionalTan();
+        applyBaseBorderWithOptionalTan();
         if (cardBody != null)
         {
             cardBody.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -305,6 +381,24 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
 
         buildAdditionalMenu();
 
+        // Deduplicate Pin/Unpin items if multiple sources added them
+        for (int i = popupMenu.getComponentCount() - 1, seenPin = 0, seenUnpin = 0; i >= 0; i--)
+        {
+            java.awt.Component c = popupMenu.getComponent(i);
+            if (c instanceof javax.swing.JMenuItem)
+            {
+                String text = ((javax.swing.JMenuItem) c).getText();
+                if ("Pin goal".equals(text))
+                {
+                    if (seenPin++ > 0) popupMenu.remove(i);
+                }
+                else if ("Unpin goal".equals(text))
+                {
+                    if (seenUnpin++ > 0) popupMenu.remove(i);
+                }
+            }
+        }
+
         // Refresh all descendants that implement Refreshable
         for (Component component : getComponents()) {
             refreshDescendants(component);
@@ -321,17 +415,39 @@ public class ListItemPanel<T> extends JPanel implements Refreshable
     {
         if (item instanceof Goal)
         {
+            Goal goal = (Goal) item;
+            JMenuItem pinToggle = new JMenuItem(goal.isPinned() ? "Unpin goal" : "Pin goal");
+            pinToggle.addActionListener(e -> {
+                // Toggle pin state
+                boolean nowPinned = !goal.isPinned();
+                goal.setPinned(nowPinned);
+
+                // Reorder this item in the visible list immediately so it moves without waiting on a rebuild
+                try {
+                    if (nowPinned) {
+                        list.moveToTop(item);
+                    } else {
+                        list.moveToBottom(item);
+                    }
+                } catch (Throwable ignore) {
+                    // If list doesn't support it for some reason, we still continue with refresh
+                }
+
+                // Refresh this card and ask the container to repaint/rebuild
+                refresh();
+                requestContainerRefresh();
+            });
+            popupMenu.add(pinToggle);
+
             JMenuItem markAllComplete = new JMenuItem("Mark all as completed");
             JMenuItem markAllIncomplete = new JMenuItem("Mark all as incomplete");
 
             markAllComplete.addActionListener(e -> {
-                Goal goal = (Goal) item;
                 goal.setAllTasksCompleted(true);
                 refresh();
             });
 
             markAllIncomplete.addActionListener(e -> {
-                Goal goal = (Goal) item;
                 goal.setAllTasksCompleted(false);
                 refresh();
             });
