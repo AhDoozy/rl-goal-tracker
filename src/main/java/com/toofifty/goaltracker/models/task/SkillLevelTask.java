@@ -19,15 +19,15 @@ public final class SkillLevelTask extends Task
     private int level;
 
     @Override
-    public String toString()
-    {
-        return String.format("%s %s", level, skill.getName());
-    }
-
-    @Override
     public String getDisplayName()
     {
         return String.format("Reach level %d %s", level, skill.getName());
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("%s %s", level, skill.getName());
     }
 
     @Override

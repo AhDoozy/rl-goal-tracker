@@ -61,13 +61,14 @@ public abstract class Task
         return !isFullyIndented();
     }
 
+
+    @Override
+    abstract public String toString();
+
     /**
      * Returns a human-readable name for the task.
      */
     public abstract String getDisplayName();
-
-    @Override
-    abstract public String toString();
 
     abstract public TaskType getType();
 }

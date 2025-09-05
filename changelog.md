@@ -14,7 +14,7 @@ Please leave for my sanity. thanks :)
 - Manual completion toggling for preset tasks.
 - Configurable color setting for completion chat messages.
 - Export and import goals to JSON with file filtering and full UI refresh.
-- Preset Goal Lists with an “Add from Preset…” button (including Quest Cape, Ironman progressions, Void, F2P, Fast Travel, etc.).
+- Preset Goal Lists with an “Add from Preset…” button.
 - Full Void Armor, Free-to-Play Quests, and Fast Travel Unlocks presets.
 - Expanded and reworked Early, Mid, and Late Ironman presets.
 - Inline editing support for goal titles and manual task descriptions.
