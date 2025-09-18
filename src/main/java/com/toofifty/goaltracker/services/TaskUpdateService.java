@@ -8,137 +8,121 @@ import net.runelite.api.GameState;
 import net.runelite.api.events.StatChanged;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-public class TaskUpdateService
+/**
+ * Updates task status based on current client state and events.
+ */
+@Singleton
+public final class TaskUpdateService
 {
-    @Inject
-    private Client client;
+    @Inject private Client client;
+    @Inject private ItemCache itemCache;
 
-    @Inject
-    private ItemCache itemCache;
-
-    public boolean update(Task task) {
-        switch (task.getType()) {
-            case SKILL_LEVEL: return this.update((SkillLevelTask) task);
-            case SKILL_XP: return this.update((SkillXpTask) task);
-            case QUEST: return this.update((QuestTask) task);
-            case ITEM: return this.update((ItemTask) task);
-            default: return false;
+    /**
+     * Dispatch update for a generic task, returning true if status/values changed.
+     */
+    public boolean update(Task task)
+    {
+        switch (task.getType())
+        {
+            case SKILL_LEVEL: return update((SkillLevelTask) task);
+            case SKILL_XP:    return update((SkillXpTask) task);
+            case QUEST:       return update((QuestTask) task);
+            case ITEM:        return update((ItemTask) task);
+            default:          return false;
         }
     }
 
-    /**
-     * Returns true if an update has occurred
-     * @param task the skill level task to validate
-     */
+    // -------------------- Skill Level --------------------
+
+    /** Returns true if an update has occurred. */
     public boolean update(SkillLevelTask task)
     {
-        if (client.getGameState() != GameState.LOGGED_IN) return false;
-
-        return this.update(task, client.getRealSkillLevel(task.getSkill()));
+        if (client.getGameState() != GameState.LOGGED_IN || !client.isClientThread())
+        {
+            return false;
+        }
+        return update(task, client.getRealSkillLevel(task.getSkill()));
     }
 
-    /**
-     * Returns true if an update has occurred
-     * @param task the skill level task to validate
-     * @param event the stat changed event this update is tied to
-     */
+    /** Returns true if an update has occurred (event-driven). */
     public boolean update(SkillLevelTask task, StatChanged event)
     {
-        if (event.getSkill() != task.getSkill()) return false;
-
-        return this.update(task, event.getLevel());
+        if (event.getSkill() != task.getSkill())
+        {
+            return false;
+        }
+        return update(task, event.getLevel());
     }
 
-    /**
-     * Returns true if an update has occurred
-     * @param task the skill level task to validate
-     */
+    /** Returns true if an update has occurred given a specific level. */
     public boolean update(SkillLevelTask task, int level)
     {
-        Status oldStatus = task.getStatus();
-
-        task.setStatus(
-                level >= task.getLevel()
-                        ? Status.COMPLETED
-                        : Status.NOT_STARTED
-        );
-
+        final Status oldStatus = task.getStatus();
+        task.setStatus(level >= task.getLevel() ? Status.COMPLETED : Status.NOT_STARTED);
         return oldStatus != task.getStatus();
     }
 
-    /**
-     * Returns true if an update has occurred
-     * @param task the skill level task to validate
-     */
+    // -------------------- Skill XP --------------------
+
+    /** Returns true if an update has occurred. */
     public boolean update(SkillXpTask task)
     {
-        if (client.getGameState() != GameState.LOGGED_IN) return false;
-
-        return this.update(task, client.getSkillExperience(task.getSkill()));
+        if (client.getGameState() != GameState.LOGGED_IN || !client.isClientThread())
+        {
+            return false;
+        }
+        return update(task, client.getSkillExperience(task.getSkill()));
     }
 
-    /**
-     * Returns true if an update has occurred
-     * @param task the skill level task to validate
-     * @param event the stat changed event this update is tied to
-     */
+    /** Returns true if an update has occurred (event-driven). */
     public boolean update(SkillXpTask task, StatChanged event)
     {
-        if (event.getSkill() != task.getSkill()) return false;
-
-        return this.update(task, event.getXp());
+        if (event.getSkill() != task.getSkill())
+        {
+            return false;
+        }
+        return update(task, event.getXp());
     }
 
-    /**
-     * Returns true if an update has occurred
-     * @param task the skill xp task to validate
-     */
+    /** Returns true if an update has occurred given a specific XP value. */
     public boolean update(SkillXpTask task, int xp)
     {
-        Status oldStatus = task.getStatus();
-
-        task.setStatus(
-                xp >= task.getXp()
-                    ? Status.COMPLETED
-                    : Status.NOT_STARTED
-        );
-
+        final Status oldStatus = task.getStatus();
+        task.setStatus(xp >= task.getXp() ? Status.COMPLETED : Status.NOT_STARTED);
         return oldStatus != task.getStatus();
     }
 
-    /**
-     * Returns true if an update has occurred
-     * @param task the quest task to validate
-     */
+    // -------------------- Quest --------------------
+
+    /** Returns true if an update has occurred. */
     public boolean update(QuestTask task)
     {
-        if (client.getGameState() != GameState.LOGGED_IN || !client.isClientThread()) return false;
-
-        Status oldStatus = task.getStatus();
-
+        if (client.getGameState() != GameState.LOGGED_IN || !client.isClientThread())
+        {
+            return false;
+        }
+        final Status oldStatus = task.getStatus();
         task.setStatus(Status.fromQuestState(task.getQuest().getState(client)));
-
         return oldStatus != task.getStatus();
     }
 
-    /**
-     * Returns true if an update has occurred
-     * @param task the item task to validate
-     */
+    // -------------------- Item --------------------
+
+    /** Returns true if an update has occurred. */
     public boolean update(ItemTask task)
     {
-        int oldAcquired = task.getAcquired();
-        Status oldStatus = task.getStatus();
+        final int oldAcquired = task.getAcquired();
+        final Status oldStatus = task.getStatus();
 
         task.setAcquired(Math.min(itemCache.getTotalQuantity(task.getItemId()), task.getQuantity()));
 
         task.setStatus(
             task.getAcquired() >= task.getQuantity()
                 ? Status.COMPLETED
-                : (task.getAcquired() > 0
-                    ? Status.IN_PROGRESS
-                    : Status.NOT_STARTED));
+                : (task.getAcquired() > 0 ? Status.IN_PROGRESS : Status.NOT_STARTED)
+        );
 
         return oldAcquired != task.getAcquired() || oldStatus != task.getStatus();
     }

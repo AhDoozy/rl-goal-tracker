@@ -6,7 +6,11 @@ import net.runelite.api.Skill;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 
-public class SkillAdapter implements JsonSerializer<Skill>, JsonDeserializer<Skill> {
+/**
+ * Gson adapter for RuneLite Skills.
+ * Serializes/deserializes skills by their display name.
+ */
+public final class SkillAdapter implements JsonSerializer<Skill>, JsonDeserializer<Skill> {
     @Override
     public JsonElement serialize(Skill src, Type typeOfSrc, JsonSerializationContext context) {
         return context.serialize(src.getName());

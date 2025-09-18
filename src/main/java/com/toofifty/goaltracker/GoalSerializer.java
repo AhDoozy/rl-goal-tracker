@@ -11,11 +11,14 @@ import com.toofifty.goaltracker.utils.ReorderableList;
 import net.runelite.api.Quest;
 import net.runelite.api.Skill;
 
+import javax.inject.Inject;
 import java.util.List;
 
-import javax.inject.Inject;
-
-public class GoalSerializer
+/**
+ * Handles JSON serialization and deserialization of Goals.
+ * Uses custom adapters for Task, Skill, and Quest types with consistent field naming.
+ */
+public final class GoalSerializer
 {	
     @Inject
 	private Gson gson;

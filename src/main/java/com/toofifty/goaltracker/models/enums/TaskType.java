@@ -6,6 +6,10 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+/**
+ * Enumeration of supported task types for goals.
+ * Used in JSON serialization and deserialization (manual, skill, quest, item).
+ */
 public enum TaskType
 {
     @SerializedName("manual")

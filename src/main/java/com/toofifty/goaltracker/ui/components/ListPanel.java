@@ -14,7 +14,11 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ListPanel<T> extends JScrollPane implements Refreshable
+/**
+ * Scrollable container that renders and manages a list of items with optional placeholder text.
+ * Supports reordering, removal, and refresh of child panels.
+ */
+public final class ListPanel<T> extends JScrollPane implements Refreshable
 {
     private final JPanel listPanel = new JPanel(new GridBagLayout());
 
@@ -24,8 +28,11 @@ public class ListPanel<T> extends JScrollPane implements Refreshable
     private final Map<T, ListItemPanel<T>> itemPanelMap = new HashMap<>();
 
     private int gap = 2;
-    private String placeholder = "Nothing interesting happens.";
+    private JComponent placeholder = new JLabel("Nothing interesting happens.");
     private Consumer<T> updatedListener;
+
+    private int rowLeftInset = 0;
+    private int rowRightInset = 0;
 
     public ListPanel(
         ReorderableList<T> reorderableList,
@@ -35,15 +42,16 @@ public class ListPanel<T> extends JScrollPane implements Refreshable
         this.reorderableList = reorderableList;
         this.renderItem = renderItem;
 
-        setBorder(new EmptyBorder(10, 10, 10, 10));
 
         listPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        // Add left/right padding so card content aligns with the header
+        listPanel.setBorder(new EmptyBorder(0, 10, 0, 10));
 
         JPanel wrapperPanel = new JPanel(new BorderLayout());
         wrapperPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         wrapperPanel.add(listPanel, BorderLayout.NORTH);
 
-        setBorder(new EmptyBorder(4, 4, 4 - gap, 4));
+        setBorder(new EmptyBorder(0, 0, 0, 0));
         setBackground(ColorScheme.DARKER_GRAY_COLOR);
         getVerticalScrollBar().setPreferredSize(new Dimension(12, 0));
         getVerticalScrollBar().setBorder(new EmptyBorder(0, 4, 0, 0));
@@ -57,13 +65,26 @@ public class ListPanel<T> extends JScrollPane implements Refreshable
     public void setGap(int gap)
     {
         this.gap = gap;
-        setBorder(new EmptyBorder(4, 4, 4 - gap, 4));
+        setBorder(new EmptyBorder(0, 0, 0, 0));
         tryBuildList();
     }
 
-    public void setPlaceholder(String placeholder)
+    public void setRowSideInsets(int left, int right)
     {
-        this.placeholder = placeholder;
+        this.rowLeftInset = Math.max(0, left);
+        this.rowRightInset = Math.max(0, right);
+        tryBuildList();
+    }
+
+    public void setPlaceholder(String placeholderText)
+    {
+        this.placeholder = new JLabel(placeholderText);
+        tryBuildList();
+    }
+
+    public void setPlaceholder(JComponent placeholderComponent)
+    {
+        this.placeholder = placeholderComponent;
         tryBuildList();
     }
 
@@ -78,7 +99,10 @@ public class ListPanel<T> extends JScrollPane implements Refreshable
     @Override
     public void refresh()
     {
-        // refresh all children
+        // Rebuild the list first in case the underlying data changed
+        tryBuildList();
+
+        // Then refresh all children
         for (Component component : listPanel.getComponents()) {
             if (component instanceof Refreshable) {
                 ((Refreshable) component).refresh();
@@ -96,14 +120,12 @@ public class ListPanel<T> extends JScrollPane implements Refreshable
 
         itemPanel.onReordered((updatedItem) -> {
             tryBuildList();
-
-            this.updatedListener.accept(updatedItem);
+            if (this.updatedListener != null) this.updatedListener.accept(updatedItem);
         });
 
         itemPanel.onRemoved((updatedItem) -> {
             tryBuildList();
-
-            this.updatedListener.accept(updatedItem);
+            if (this.updatedListener != null) this.updatedListener.accept(updatedItem);
         });
 
         itemPanelMap.put(item, itemPanel);
@@ -123,7 +145,7 @@ public class ListPanel<T> extends JScrollPane implements Refreshable
         constraints.weightx = 1;
         constraints.gridy = gridy;
         constraints.gridx = 0;
-        constraints.insets = new Insets(0, 0, gap, 0);
+        constraints.insets = new Insets(4, rowLeftInset, gap, rowRightInset);
         return constraints;
     }
 
@@ -131,7 +153,7 @@ public class ListPanel<T> extends JScrollPane implements Refreshable
     {
         for (Component component : listPanel.getComponents()) {
             if (component instanceof ListItemPanel) {
-                ((ListItemPanel<?>) component).refreshMenu();
+                ((Refreshable) component).refresh();
             }
         }
     }
@@ -141,14 +163,18 @@ public class ListPanel<T> extends JScrollPane implements Refreshable
      */
     public void tryBuildList()
     {
+        itemPanelMap.clear();
+
         if (reorderableList.isEmpty()) {
             listPanel.removeAll();
 
-            JLabel placeholderLabel = new JLabel(placeholder);
-            placeholderLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+            if (placeholder instanceof JLabel) {
+                ((JLabel) placeholder).setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+            }
             JPanel placeholderPanel = new JPanel();
             placeholderPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-            placeholderPanel.add(placeholderLabel);
+            placeholderPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
+            placeholderPanel.add(placeholder);
             listPanel.add(placeholderPanel, getConstraints());
         } else {
             listPanel.removeAll();

@@ -6,7 +6,11 @@ import net.runelite.api.Quest;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 
-public class QuestAdapter implements JsonSerializer<Quest>, JsonDeserializer<Quest> {
+/**
+ * Gson adapter for RuneLite Quests.
+ * Serializes/deserializes quests by their unique ID.
+ */
+public final class QuestAdapter implements JsonSerializer<Quest>, JsonDeserializer<Quest> {
 
     @Override
     public JsonElement serialize(Quest src, Type typeOfSrc, JsonSerializationContext context) {

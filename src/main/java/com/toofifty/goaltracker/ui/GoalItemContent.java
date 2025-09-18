@@ -2,28 +2,203 @@ package com.toofifty.goaltracker.ui;
 
 import com.toofifty.goaltracker.GoalTrackerPlugin;
 import com.toofifty.goaltracker.models.Goal;
+import com.toofifty.goaltracker.ui.components.ListItemPanel;
+import net.runelite.client.ui.ColorScheme;
 
 import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import static com.toofifty.goaltracker.utils.Constants.STATUS_TO_COLOR;
 
-public class GoalItemContent extends JPanel implements Refreshable
+/**
+ * UI component for rendering a Goal in a list.
+ * Shows the title (editable), progress count, and a slim progress bar.
+ * Also supports pinning, context menus, and refresh on goal status change.
+ */
+public final class GoalItemContent extends JPanel implements Refreshable
 {
-    private final JLabel title = new JLabel();
+    private final JTextArea titleLabel = new JTextArea();
+    private final JTextField titleEdit = new JTextField();
     private final JLabel progress = new JLabel();
+    private final SlimBar progressBar = new SlimBar();
+    private final JPanel titleStack = new JPanel(new CardLayout());
 
     private final Goal goal;
+
+    private JPanel topRow;
+
+    //private static final int PIN_STRIPE_W = 3; // px
+    private static final Color PINNED_BG_COLOR = new Color(45, 45, 45); // darker gray background
 
     GoalItemContent(GoalTrackerPlugin plugin, Goal goal)
     {
         super(new BorderLayout());
         this.goal = goal;
 
-        add(title, BorderLayout.WEST);
-        add(progress, BorderLayout.EAST);
+        setBorder(BorderFactory.createEmptyBorder(6, 0, 6, 0)); // remove extra left/right padding so title can span edge-to-edge within the card body
+        // Let the parent card body paint the background; avoid double fills
+        setOpaque(false);
+        setBackground(null);
+
+        topRow = new JPanel(new BorderLayout());
+        topRow.setOpaque(false);
+
+        // Title label (display mode)
+        titleLabel.setLineWrap(true);
+        titleLabel.setWrapStyleWord(true);
+        titleLabel.setEditable(false);
+        titleLabel.setOpaque(false);
+        titleLabel.setBorder(null);
+        titleLabel.setFocusable(false);
+        titleLabel.setFont(getFont());
+        titleLabel.setMinimumSize(new Dimension(0, titleLabel.getPreferredSize().height));
+        titleLabel.setMargin(new Insets(0, 0, 0, 0));
+
+        // Title edit (edit mode)
+        titleEdit.setBorder(null);
+        titleEdit.setOpaque(false);
+        titleEdit.setDragEnabled(true);
+
+        // Constrain edit field so it never expands the card width
+        titleEdit.setColumns(1); // keep preferred width minimal; BorderLayout will stretch it as needed
+        int editH = titleEdit.getPreferredSize().height;
+        titleEdit.setMinimumSize(new Dimension(0, editH));
+        titleEdit.setPreferredSize(new Dimension(10, editH)); // tiny preferred width; parent determines real width
+        // ESC cancels rename without saving
+        InputMap im = titleEdit.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap am = titleEdit.getActionMap();
+        im.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_ESCAPE, 0), "gt.cancelEdit");
+        am.put("gt.cancelEdit", new AbstractAction() {
+            @Override public void actionPerformed(java.awt.event.ActionEvent e) { exitEdit(false); }
+        });
+
+        titleStack.setOpaque(false);
+        titleStack.add(titleLabel, "label");
+        titleStack.add(titleEdit, "edit");
+        topRow.add(titleStack, BorderLayout.CENTER);
+
+        // Swap to edit only on LEFT double‑click (not on right‑click)
+        titleLabel.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e) && e.getClickCount() == 2) {
+                    enterEdit();
+                }
+            }
+        });
+        // Commit edits on Enter and when focus is lost
+        titleEdit.addActionListener(e -> exitEdit(true));
+        titleEdit.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override public void focusLost(java.awt.event.FocusEvent e) { exitEdit(true); }
+        });
+
+        // Place progress at the far right with a small left gap and a yellow border
+        progress.setBorder(new javax.swing.border.EmptyBorder(0, 3, 0, 0));
+        topRow.add(progress, BorderLayout.EAST);
+
+        // Reserve fixed width for progress like 999/999 so it never clips
+        int progW = getFontMetrics(progress.getFont()).stringWidth("999/999");
+        Dimension progSize = new Dimension(progW, progress.getPreferredSize().height);
+        progress.setPreferredSize(progSize);
+        progress.setMinimumSize(progSize);
+        add(topRow, BorderLayout.CENTER);
+
+        // Slim custom progress bar under the title row
+        progressBar.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0)); // gap above the bar
+        progressBar.setPreferredSize(new Dimension(0, 6)); // 6px tall bar
+        add(progressBar, BorderLayout.SOUTH);
+
+        // Initialize visible text and colors immediately (before first refresh)
+        {
+            Color color = STATUS_TO_COLOR.get(goal.getStatus());
+            updateTitleLabel();
+            titleEdit.setCaretColor(color);
+            progress.setText(goal.getComplete().size() + "/" + goal.getTasks().size());
+            progress.setForeground(color);
+        }
+
+        topRow.addComponentListener(new ComponentAdapter() {
+            @Override public void componentResized(ComponentEvent e) { updateTitleLabel(); }
+        });
 
         plugin.getUiStatusManager().addRefresher(goal, this::refresh);
+
+        // Ensure right-click on any child shows the parent ListItemPanel context menu
+        MouseAdapter forwardPopup = new MouseAdapter()
+        {
+            private void maybeShow(MouseEvent e)
+            {
+                if (!e.isPopupTrigger())
+                {
+                    return;
+                }
+                Component src = (Component) e.getSource();
+                JComponent listItem = (JComponent) SwingUtilities.getAncestorOfClass(ListItemPanel.class, src);
+                if (listItem == null)
+                {
+                    listItem = (JComponent) SwingUtilities.getAncestorOfClass(ListItemPanel.class, GoalItemContent.this);
+                }
+                if (listItem != null && listItem.getComponentPopupMenu() != null)
+                {
+                    Point p = SwingUtilities.convertPoint(src, e.getPoint(), listItem);
+                    JPopupMenu menu = listItem.getComponentPopupMenu();
+
+                    JMenuItem rename = new JMenuItem("Rename");
+                    ((JComponent) rename).putClientProperty("pinToggle", Boolean.TRUE); // reuse cleanup flag
+                    rename.addActionListener(ev -> enterEdit());
+                    menu.add(rename);
+
+                    PopupMenuListener cleanup = new PopupMenuListener() {
+                        @Override public void popupMenuWillBecomeVisible(PopupMenuEvent e) { }
+                        @Override public void popupMenuCanceled(PopupMenuEvent e) { cleanup(menu, this); }
+                        @Override public void popupMenuWillBecomeInvisible(PopupMenuEvent e) { cleanup(menu, this); }
+                        private void cleanup(JPopupMenu m, PopupMenuListener self) {
+                            // Remove only the components we added this time
+                            java.util.List<Component> toRemove = new java.util.ArrayList<>();
+                            for (Component c : m.getComponents()) {
+                                if (c instanceof JComponent) {
+                                    Object flag = ((JComponent) c).getClientProperty("pinToggle");
+                                    if (Boolean.TRUE.equals(flag)) {
+                                        toRemove.add(c);
+                                    }
+                                }
+                            }
+                            for (Component c : toRemove) {
+                                m.remove(c);
+                            }
+                            m.removePopupMenuListener(self);
+                        }
+                    };
+                    menu.addPopupMenuListener(cleanup);
+
+                    menu.show(listItem, p.x, p.y);
+                }
+            }
+
+            @Override public void mousePressed(MouseEvent e) { maybeShow(e); }
+            @Override public void mouseReleased(MouseEvent e) { maybeShow(e); }
+        };
+
+        this.addMouseListener(forwardPopup);
+        titleLabel.addMouseListener(forwardPopup);
+        titleEdit.addMouseListener(forwardPopup);
+        progress.addMouseListener(forwardPopup);
+        progressBar.addMouseListener(forwardPopup);
+        // Ensure item icon/text initialize on first render (e.g., on login)
+        SwingUtilities.invokeLater(this::refresh);
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        // In case construction happened before UI was realized, refresh when shown
+        SwingUtilities.invokeLater(this::refresh);
     }
 
     @Override
@@ -31,11 +206,86 @@ public class GoalItemContent extends JPanel implements Refreshable
     {
         Color color = STATUS_TO_COLOR.get(goal.getStatus());
 
-        title.setText(goal.getDescription());
-        title.setForeground(color);
+        updateTitleLabel();
+        titleEdit.setCaretColor(color);
 
         progress.setText(
             goal.getComplete().size() + "/" + goal.getTasks().size());
         progress.setForeground(color);
+
+        int total = goal.getTasks().size();
+        int done = goal.getComplete().size();
+        progressBar.setVisible(total > 0);
+        progressBar.setProgress(done, total, color);
+        SwingUtilities.invokeLater(this::updateTitleLabel);
+    }
+    private static class SlimBar extends JComponent {
+        private int done = 0;
+        private int total = 1;
+        private Color fill = Color.GREEN;
+
+        void setProgress(int done, int total, Color fill) {
+            this.done = done;
+            this.total = Math.max(1, total);
+            this.fill = fill;
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            int w = getWidth();
+            int h = getHeight();
+            // track
+            g2.setColor(ColorScheme.DARKER_GRAY_COLOR);
+            g2.fillRect(0, 0, w, h);
+            // fill
+            int barW = (int) ((done / (double) total) * w);
+            g2.setColor(fill != null ? fill : Color.GREEN);
+            g2.fillRect(0, 0, barW, h);
+            g2.dispose();
+        }
+    }
+
+    private void updateTitleLabel()
+    {
+        if (topRow == null) return;
+        String full = goal.getDescription() != null ? goal.getDescription() : "";
+        titleLabel.setText(full.isBlank() ? " " : full);
+        titleLabel.setToolTipText(full.isEmpty() ? null : full);
+    }
+
+    private void enterEdit()
+    {
+        titleEdit.setText(goal.getDescription() != null ? goal.getDescription() : "");
+        ((CardLayout) titleStack.getLayout()).show(titleStack, "edit");
+        titleEdit.requestFocusInWindow();
+        titleEdit.selectAll();
+    }
+
+    private void exitEdit(boolean save)
+    {
+        if (save) {
+            String newText = titleEdit.getText();
+            if (newText != null) {
+                goal.setDescription(newText);
+            }
+        }
+        ((CardLayout) titleStack.getLayout()).show(titleStack, "label");
+        updateTitleLabel();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g)
+    {
+        if (goal != null && goal.isPinned())
+        {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(PINNED_BG_COLOR);
+            g2.fillRect(0, 0, getWidth(), getHeight());
+            g2.dispose();
+        }
+        super.paintComponent(g);
     }
 }

@@ -1,3 +1,4 @@
+
 package com.toofifty.goaltracker.utils;
 
 import java.util.ArrayList;
@@ -5,7 +6,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class ReorderableList<T> extends ArrayList<T>
+/**
+ * ArrayList with helper methods to move elements up, down, top, or bottom.
+ * Used to maintain user-specified ordering for tasks and goals.
+ */
+public final class ReorderableList<T> extends ArrayList<T>
 {
     private void move(T item, int offset) {
         int i = this.indexOf(item);

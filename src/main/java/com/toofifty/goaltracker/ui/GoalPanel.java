@@ -1,22 +1,28 @@
 package com.toofifty.goaltracker.ui;
 
 import com.toofifty.goaltracker.GoalTrackerPlugin;
+import com.toofifty.goaltracker.models.ActionHistory;
 import com.toofifty.goaltracker.models.Goal;
+import com.toofifty.goaltracker.models.RemoveTaskAction;
 import com.toofifty.goaltracker.models.enums.TaskType;
-import com.toofifty.goaltracker.models.task.ManualTask;
 import com.toofifty.goaltracker.models.task.Task;
-import com.toofifty.goaltracker.ui.components.EditableInput;
-import com.toofifty.goaltracker.ui.components.ListPanel;
-import com.toofifty.goaltracker.ui.components.ListTaskPanel;
-import com.toofifty.goaltracker.ui.components.TextButton;
-import java.awt.BorderLayout;
-import java.util.Objects;
-import java.util.function.Consumer;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
+import com.toofifty.goaltracker.ui.components.*;
 import net.runelite.client.ui.ColorScheme;
 
-public class GoalPanel extends JPanel implements Refreshable
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.JTextComponent;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.util.Objects;
+import java.util.function.Consumer;
+
+/**
+ * Panel showing a single Goal: header, action bar (undo/redo, prereqs),
+ * editable description, and the task list with add-new controls.
+ */
+public final class GoalPanel extends JPanel implements Refreshable
 {
     private final GoalTrackerPlugin plugin;
     private final Goal goal;
@@ -27,6 +33,11 @@ public class GoalPanel extends JPanel implements Refreshable
     private Consumer<Task> taskAddedListener;
     private Consumer<Task> taskUpdatedListener;
 
+    private final ActionHistory actionHistory = new ActionHistory();
+    private ActionBarButton undoButton;
+    private ActionBarButton redoButton;
+    private ActionBarButton prereqsButton;
+
     GoalPanel(GoalTrackerPlugin plugin, Goal goal, Runnable closeListener)
     {
         super();
@@ -35,53 +46,140 @@ public class GoalPanel extends JPanel implements Refreshable
 
         setLayout(new BorderLayout());
 
-        TextButton backButton = new TextButton("< Back", ColorScheme.PROGRESS_ERROR_COLOR);
-        backButton.onClick((e) -> closeListener.run());
-
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.add(backButton, BorderLayout.WEST);
         headerPanel.setBorder(new EmptyBorder(0, 0, 8, 0));
         add(headerPanel, BorderLayout.NORTH);
 
-        descriptionInput = new EditableInput((value) -> {
-            goal.setDescription(value);
-            this.goalUpdatedListener.accept(goal);
-        });
-        headerPanel.add(descriptionInput, BorderLayout.CENTER);
+        // Back row above the action bar
+        JPanel backRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        backRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        ActionBarButton backButton = new ActionBarButton("Back", closeListener::run);
+        backRow.add(backButton);
 
-        taskListPanel = new ListPanel<>(goal.getTasks(), (task) -> {
-            ListTaskPanel taskPanel = new ListTaskPanel(goal.getTasks(), task);
-            taskPanel.add(new TaskItemContent(plugin, task));
-            taskPanel.setBorder(new EmptyBorder(2, 4, 2, 4));
+        // Action bar with Add pre-reqs on the left of Undo/Redo
+        ActionBar actionBar = new ActionBar();
+        prereqsButton = new ActionBarButton("Add Quest pre-reqs", this::addPrereqs);
+        prereqsButton.setToolTipText("Add prerequisite quests for this goal");
+        prereqsButton.setEnabled(true);
 
-            if (TaskType.MANUAL.equals(task.getType())) {
-                ManualTask manualTask = (ManualTask) task;
+        undoButton = new ActionBarButton("Undo", this::doUndo);
+        redoButton = new ActionBarButton("Redo", this::doRedo);
 
-                taskPanel.onClick(e -> {
-                    manualTask.toggle();
+        actionBar.left().add(prereqsButton);
+        actionBar.left().add(undoButton);
+        actionBar.left().add(redoButton);
 
-                    if (task.getStatus().isCompleted()) {
-                        plugin.notifyTask(task);
-                    }
-
-                    plugin.getUiStatusManager().refresh(task);
-                    this.taskUpdatedListener.accept(manualTask);
-                });
+        ActionBarButton importButton = new ActionBarButton("Import", () -> {
+            String input = javax.swing.JOptionPane.showInputDialog(GoalPanel.this, "Paste goals JSON:");
+            if (input == null) {
+                return; // canceled
+            }
+            input = input.trim();
+            if (input.isEmpty()) {
+                return; // nothing to import
             }
 
-            taskPanel.onIndented(e -> {
-                this.goalUpdatedListener.accept(goal);
-                plugin.getUiStatusManager().refresh(goal);
-                this.refresh();
-            });
+            Object[] options = {"Overwrite", "Merge", "Cancel"};
+            int choice = javax.swing.JOptionPane.showOptionDialog(
+                GoalPanel.this,
+                "Importing will change your current goals.\nDo you want to overwrite existing goals or merge with them?",
+                "Import Goals",
+                javax.swing.JOptionPane.YES_NO_CANCEL_OPTION,
+                javax.swing.JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[2]
+            );
 
-            taskPanel.onUnindented(e -> {
-                this.goalUpdatedListener.accept(goal);
-                plugin.getUiStatusManager().refresh(goal);
-                this.refresh();
-            });
+            if (choice == javax.swing.JOptionPane.YES_OPTION) {
+                plugin.getGoalManager().importJson(input, true);   // Overwrite
+            } else if (choice == javax.swing.JOptionPane.NO_OPTION) {
+                plugin.getGoalManager().importJson(input, false);  // Merge
+            } else {
+                return; // canceled
+            }
 
-            return taskPanel;
+            // Refresh current view after import
+            plugin.setValidateAll(true);
+            plugin.getUiStatusManager().refresh(goal);
+            refreshTaskList();
+        });
+        actionBar.left().add(importButton);
+
+        // Stack back row above the action bar in the header's NORTH
+        JPanel headerTop = new JPanel();
+        headerTop.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        headerTop.setLayout(new BoxLayout(headerTop, BoxLayout.Y_AXIS));
+        headerTop.add(backRow);
+        headerTop.add(actionBar);
+
+        headerPanel.add(headerTop, BorderLayout.NORTH);
+
+        updateUndoRedoButtons();
+
+        descriptionInput = new EditableInput((value) -> {
+            goal.setDescription(value);
+            if (this.goalUpdatedListener != null) this.goalUpdatedListener.accept(goal);
+        });
+        headerPanel.add(descriptionInput, BorderLayout.CENTER);
+        SwingUtilities.invokeLater(() -> installClipboardSupport(descriptionInput));
+        descriptionInput.addContainerListener(new java.awt.event.ContainerAdapter()
+        {
+            @Override public void componentAdded(java.awt.event.ContainerEvent e)
+            {
+                SwingUtilities.invokeLater(() -> installClipboardSupport(descriptionInput));
+            }
+        });
+
+        taskListPanel = new ListPanel<>(goal.getTasks(), (task) -> {
+            try {
+                ListTaskPanel taskPanel = new ListTaskPanel(goal.getTasks(), task);
+                taskPanel.setActionHistory(actionHistory);
+                TaskItemContent taskContent = new TaskItemContent(plugin, goal, task);
+                taskContent.setActionHistory(actionHistory);
+                taskPanel.add(taskContent);
+                taskPanel.setTaskContent(taskContent);
+                taskContent.refresh();
+                taskPanel.setOpaque(true);
+                taskPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+                taskPanel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(1, 6, 0, 6, ColorScheme.DARKER_GRAY_COLOR), // thinner divider
+                    new EmptyBorder(2, 4, 2, 4)
+                ));
+
+
+                taskPanel.onIndented(e -> {
+                    if (this.goalUpdatedListener != null) this.goalUpdatedListener.accept(goal);
+                    plugin.getUiStatusManager().refresh(goal);
+                    this.refresh();
+                });
+
+                taskPanel.onUnindented(e -> {
+                    if (this.goalUpdatedListener != null) this.goalUpdatedListener.accept(goal);
+                    plugin.getUiStatusManager().refresh(goal);
+                    this.refresh();
+                });
+
+                taskPanel.onRemovedWithIndex((removedTask, index) -> {
+                    actionHistory.push(new RemoveTaskAction(goal.getTasks(), removedTask, index));
+                    updateUndoRedoButtons();
+                });
+
+                return taskPanel;
+            } catch (Throwable t) {
+                t.printStackTrace();
+                // Render a minimal, visible error row instead of breaking the entire list
+                ListTaskPanel fallback = new ListTaskPanel(goal.getTasks(), task);
+                JPanel error = new JPanel(new BorderLayout());
+                error.setOpaque(true);
+                error.setBackground(ColorScheme.DARK_GRAY_COLOR);
+                JLabel msg = new JLabel("\u26A0\uFE0F Failed to render task; see log.");
+                msg.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+                msg.setBorder(new EmptyBorder(2, 4, 2, 4));
+                error.add(msg, BorderLayout.CENTER);
+                fallback.add(error);
+                return fallback;
+            }
         });
         taskListPanel.setGap(0);
         taskListPanel.setPlaceholder("No tasks added yet");
@@ -90,6 +188,13 @@ public class GoalPanel extends JPanel implements Refreshable
         NewTaskPanel newTaskPanel = new NewTaskPanel(plugin, goal);
         newTaskPanel.onTaskAdded(this::updateFromNewTask);
         add(newTaskPanel, BorderLayout.SOUTH);
+
+        // Global ESC to go back
+        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+            .put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_ESCAPE, 0), "gt.back");
+        getActionMap().put("gt.back", new javax.swing.AbstractAction() {
+            @Override public void actionPerformed(java.awt.event.ActionEvent e) { closeListener.run(); }
+        });
     }
 
     public void updateFromNewTask(Task task)
@@ -97,9 +202,21 @@ public class GoalPanel extends JPanel implements Refreshable
         taskListPanel.tryBuildList();
         taskListPanel.refresh();
         plugin.setValidateAll(true);
+        plugin.getUiStatusManager().refresh(goal);
+        revalidate();
+        repaint();
 
         if (Objects.nonNull(this.taskAddedListener)) this.taskAddedListener.accept(task);
         if (Objects.nonNull(this.taskUpdatedListener)) this.taskUpdatedListener.accept(task);
+    }
+
+    public void refreshTaskList()
+    {
+        taskListPanel.tryBuildList();
+        taskListPanel.refresh();
+        plugin.getUiStatusManager().refresh(goal);
+        revalidate();
+        repaint();
     }
 
     @Override
@@ -126,5 +243,156 @@ public class GoalPanel extends JPanel implements Refreshable
         this.taskUpdatedListener = listener;
 
         taskListPanel.onUpdated(this.taskUpdatedListener);
+    }
+    private void installClipboardSupport(Component root)
+    {
+        JTextComponent tc = findTextComponent(root);
+        if (tc == null)
+        {
+            return;
+        }
+
+        // Ensure transfer handler to enable clipboard operations on text property
+        tc.setTransferHandler(new TransferHandler("text"));
+        tc.setDragEnabled(true);
+
+        // Context menu with Cut/Copy/Paste/Select All
+        JPopupMenu menu = new JPopupMenu();
+        JMenuItem cut = new JMenuItem(new DefaultEditorKit.CutAction());
+        cut.setText("Cut");
+        JMenuItem copy = new JMenuItem(new DefaultEditorKit.CopyAction());
+        copy.setText("Copy");
+        JMenuItem paste = new JMenuItem(new DefaultEditorKit.PasteAction());
+        paste.setText("Paste");
+        JMenuItem selectAll = new JMenuItem("Select All");
+        selectAll.addActionListener(e -> tc.selectAll());
+        menu.add(cut);
+        menu.add(copy);
+        menu.add(paste);
+        menu.addSeparator();
+        menu.add(selectAll);
+        tc.setComponentPopupMenu(menu);
+
+        // Keyboard shortcuts (Ctrl/Cmd + C/V/X/A)
+        int mask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+        InputMap im = tc.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap am = tc.getActionMap();
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, mask), DefaultEditorKit.copyAction);
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, mask), DefaultEditorKit.pasteAction);
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_X, mask), DefaultEditorKit.cutAction);
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, mask), DefaultEditorKit.selectAllAction);
+        am.put(DefaultEditorKit.copyAction, new DefaultEditorKit.CopyAction());
+        am.put(DefaultEditorKit.pasteAction, new DefaultEditorKit.PasteAction());
+        am.put(DefaultEditorKit.cutAction, new DefaultEditorKit.CutAction());
+        am.put(DefaultEditorKit.selectAllAction, new AbstractAction()
+        {
+            @Override public void actionPerformed(java.awt.event.ActionEvent e) { tc.selectAll(); }
+        });
+    }
+
+    private JTextComponent findTextComponent(Component c)
+    {
+        if (c instanceof JTextComponent)
+        {
+            return (JTextComponent) c;
+        }
+        if (c instanceof Container)
+        {
+            for (Component child : ((Container) c).getComponents())
+            {
+                JTextComponent tc = findTextComponent(child);
+                if (tc != null)
+                {
+                    return tc;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void updateUndoRedoButtons()
+    {
+        if (undoButton != null)
+        {
+            undoButton.setEnabled(actionHistory.hasUndo());
+        }
+        if (redoButton != null)
+        {
+            redoButton.setEnabled(actionHistory.hasRedo());
+        }
+    }
+
+    private void doUndo()
+    {
+        actionHistory.undo();
+        refreshTaskList();
+        updateUndoRedoButtons();
+    }
+
+    private void doRedo()
+    {
+        actionHistory.redo();
+        refreshTaskList();
+        updateUndoRedoButtons();
+    }
+
+    private void addPrereqs()
+    {
+        int processed = 0;
+        int invoked = 0;
+
+        java.util.List<TaskItemContent> contents = new java.util.ArrayList<>();
+        collectTaskItemContents(taskListPanel, contents);
+
+        for (TaskItemContent tic : contents)
+        {
+            Task t = tic.getTask();
+            if (t != null && t.getType() == TaskType.QUEST)
+            {
+                processed++;
+                if (tic.addPrereqsFromContext())
+                {
+                    invoked++;
+                }
+            }
+        }
+
+        // Refresh UI/state after batch
+        plugin.setValidateAll(true);
+        plugin.getUiStatusManager().refresh(goal);
+        refreshTaskList();
+        updateUndoRedoButtons();
+
+        if (processed == 0)
+        {
+            JOptionPane.showMessageDialog(this,
+                    "No quest tasks found in this goal.",
+                    "Add pre-reqs",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        if (invoked == 0)
+        {
+            JOptionPane.showMessageDialog(this,
+                    "All pre-reqs have already been added.\n",
+                    "Add pre-reqs",
+                    JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private static void collectTaskItemContents(Component root, java.util.List<TaskItemContent> out)
+    {
+        if (root instanceof TaskItemContent)
+        {
+            out.add((TaskItemContent) root);
+        }
+        if (root instanceof Container)
+        {
+            for (Component child : ((Container) root).getComponents())
+            {
+                collectTaskItemContents(child, out);
+            }
+        }
     }
 }

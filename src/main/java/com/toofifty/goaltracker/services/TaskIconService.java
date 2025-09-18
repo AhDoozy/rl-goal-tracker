@@ -8,65 +8,76 @@ import net.runelite.client.game.SkillIconManager;
 import net.runelite.client.util.ImageUtil;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class TaskIconService
+/**
+ * Resolves small 16x16 icons for tasks (items, skills, quests, manual checks).
+ */
+@Singleton
+public final class TaskIconService
 {
+    private static final int ICON_SIZE = 16;
+
     public static final ImageIcon CROSS_MARK_ICON;
     public static final ImageIcon CHECK_MARK_ICON;
     public static final ImageIcon QUEST_ICON;
     public static final ImageIcon QUEST_COMPLETE_ICON;
     public static final ImageIcon UNKNOWN_ICON;
 
-    static {
+    static
+    {
         CROSS_MARK_ICON = new ImageIcon(
-                ImageUtil.loadImageResource(GoalTrackerPlugin.class, "/cross_mark.png")
+            ImageUtil.loadImageResource(GoalTrackerPlugin.class, "/cross_mark.png")
         );
         CHECK_MARK_ICON = new ImageIcon(
-                ImageUtil.loadImageResource(GoalTrackerPlugin.class, "/check_mark.png")
+            ImageUtil.loadImageResource(GoalTrackerPlugin.class, "/check_mark.png")
         );
         QUEST_ICON = new ImageIcon(
-                ImageUtil.loadImageResource(GoalTrackerPlugin.class, "/quest_icon.png")
+            ImageUtil.loadImageResource(GoalTrackerPlugin.class, "/quest_icon.png")
         );
         QUEST_COMPLETE_ICON = new ImageIcon(
-                ImageUtil.loadImageResource(GoalTrackerPlugin.class, "/quest_complete.png")
+            ImageUtil.loadImageResource(GoalTrackerPlugin.class, "/quest_complete.png")
         );
         UNKNOWN_ICON = new ImageIcon(
-                ImageUtil.loadImageResource(GoalTrackerPlugin.class, "/question_mark.png")
+            ImageUtil.loadImageResource(GoalTrackerPlugin.class, "/question_mark.png")
         );
     }
 
-    @Inject
-    private ItemManager itemManager;
-
-    @Inject
-    private SkillIconManager skillIconManager;
-
-    @Inject
-    private Client client;
+    @Inject private ItemManager itemManager;
+    @Inject private SkillIconManager skillIconManager;
+    @Inject private Client client;
 
     public ImageIcon get(Task task)
     {
-        if (task instanceof ManualTask) {
+        if (task instanceof ManualTask)
+        {
             return get((ManualTask) task);
         }
-
-        if (task instanceof QuestTask) {
+        if (task instanceof QuestTask)
+        {
             return get((QuestTask) task);
         }
 
         BufferedImage image = null;
-        if (task instanceof SkillLevelTask) {
+        if (task instanceof SkillLevelTask)
+        {
             image = get((SkillLevelTask) task);
-        } else if (task instanceof SkillXpTask) {
+        }
+        else if (task instanceof SkillXpTask)
+        {
             image = get((SkillXpTask) task);
-        } else if (task instanceof ItemTask) {
+        }
+        else if (task instanceof ItemTask)
+        {
             image = get((ItemTask) task);
         }
 
-        if (image != null) {
-            return new ImageIcon(image.getScaledInstance(16, 16, 32));
+        if (image != null)
+        {
+            return iconify(image);
         }
 
         return UNKNOWN_ICON;
@@ -94,10 +105,16 @@ public class TaskIconService
 
     public BufferedImage get(ItemTask task)
     {
-        if (task.getCachedIcon() == null && client.isClientThread()) {
+        if (task.getCachedIcon() == null && client.isClientThread())
+        {
             task.setCachedIcon(itemManager.getImage(task.getItemId()));
         }
-
         return task.getCachedIcon();
+    }
+
+    private ImageIcon iconify(BufferedImage img)
+    {
+        Image scaled = img.getScaledInstance(ICON_SIZE, ICON_SIZE, Image.SCALE_SMOOTH);
+        return new ImageIcon(scaled);
     }
 }

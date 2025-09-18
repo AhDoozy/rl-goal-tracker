@@ -2,16 +2,21 @@ package com.toofifty.goaltracker;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import java.util.HashMap;
-import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import net.runelite.api.Client;
 import net.runelite.api.Item;
 import net.runelite.client.game.ItemManager;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.util.HashMap;
+import java.util.Map;
+
 @Singleton
-public class ItemCache
+/**
+ * Tracks player inventory contents across sessions.
+ * Persists item totals and note-link mappings for offline use.
+ */
+public final class ItemCache
 {
     private Map<Integer, Item[]> inventories;
     private Map<Integer, Integer> itemTotals;

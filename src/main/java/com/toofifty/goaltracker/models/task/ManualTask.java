@@ -9,7 +9,11 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @Getter
 @SuperBuilder
-public class ManualTask extends Task
+/**
+ * Task representing a manually tracked entry (checklist-style).
+ * Toggled complete/incomplete by the user.
+ */
+public final class ManualTask extends Task
 {
     private String description;
 
@@ -20,6 +24,12 @@ public class ManualTask extends Task
 
     @Override
     public String toString()
+    {
+        return description;
+    }
+
+    @Override
+    public String getDisplayName()
     {
         return description;
     }

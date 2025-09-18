@@ -1,62 +1,30 @@
-# Runelite Goal Tracker Plugin
+# 🏆 Goal Tracker
 
-Keep track of your OSRS goals and complete them automatically.
+> A RuneLite plugin that helps you plan, track, and achieve your Old School RuneScape goals with ease.  
+> Goal Tracker provides presets, quest requirements, progress bars, and a modern UI to make managing your tasks and goals simple and efficient.
 
-## Features
+---
+## Plugin Features
 
-- Track different types of tasks
-    - Manual tasks
-    - Skill tasks
-    - Quests
-    - Item tasks
-- Organise tasks lists into goals
-- Reorder and manage goal and task lists
-- Chat notification on task completion
+- Preset Goal Lists for quick setup of common goals
+- Pin important goals to the top of the Home panel
+- Automatically add prerequisites for quests
+- Track progress with visual progress bars
+- Import and Export goals via JSON for easy sharing or backups
+- Create and manage custom goals with tasks
 
-### Planned
+## Screenshots
 
-- More task types
-    - Achievement diaries
-    - Minigame rewards
-    - Kourend favour
-    - NPC kills
+- **Home panel with goal cards** — shows progress bars, presets, and export/import buttons.  
+  <img src="img/home_panel_new.jpg" alt="Home panel screenshot showing goal cards" width="40%" style="border:1px solid #000; box-shadow: 2px 2px 6px rgba(0,0,0,0.3); border-radius:4px;" />
 
-Suggestions are welcome - please submit an issue :)
+- **Inside a goal with task list** — displays quest prerequisites, right-click task options, item search, and a quest selector.  
+  <img src="img/goal_task_panel.jpg" alt="Goal task panel screenshot with tasks list" width="40%" style="border:1px solid #000; box-shadow: 2px 2px 6px rgba(0,0,0,0.3); border-radius:4px;" />
 
-## Usage
+- **Right‑click menu on a goal card** — options to move, pin, mark complete, or delete.  
+  <img alt="Right-click menu screenshot on Home panel goal card" src="img/right_click_goals.jpg" width="50%"/>
 
-### Goals
+- **Add from preset** — includes built-in options for Barrows gear, Void armor, and Ironman progression.  
+  <img alt="Add from preset screenshot with preset options" src="img/add_from_preset.jpg" width="60%"/>
 
-Goals are lists of tasks, and at a glance provide a quick way to view your progress towards the goal.
-
-![Goals list](img/goals_list.png)
-
-You can add a new goal with the "+ Add goal" button, and you can reorder/remove goals using right click. Clicking a goal will show the tasks within:
-
-![Goal view](img/goal_view.png)
-
-From here, you can add tasks to the goal.
-
-### Adding tasks
-
-![Task inputs](img/task_inputs.png)
-
-#### Manual tasks
-
-Basically a simple to-do list item. You can add these via the "Quick add" text box.
-
-You can toggle them on and off manually just by clicking them.
-
-Use the "+ More options" button to reveal the automatic task options.
-
-#### Skill level/XP tasks
-
-Use these tasks to automatically track skill progress. Just select a skill, and the desired level or XP amount. The task will automatically complete once you hit that level/xp.
-
-#### Quest tasks
-
-Track quest progress and completion, just select a quest or miniquest from the dropdown. Will also display in progress quests as orange.
-
-#### Item tasks
-
-Select an item using the search button and searching via the in-game chatbox, then set the desired quantity. The plugin will keep track of your items and tally up quantities stored in different inventories (bank, player, GIMP storage), and will be automatically completed once you get that amount of the item.
+-----

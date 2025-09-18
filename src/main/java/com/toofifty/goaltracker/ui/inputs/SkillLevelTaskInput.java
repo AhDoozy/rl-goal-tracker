@@ -14,9 +14,12 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.regex.Pattern;
 
-public class SkillLevelTaskInput extends TaskInput<SkillLevelTask>
+/**
+ * Input panel for creating Skill Level tasks.
+ * Provides a numeric level field (validated 1–99) and a skill dropdown.
+ */
+public final class SkillLevelTaskInput extends TaskInput
 {
-
     private FlatTextField levelField;
     private String levelFieldValue = "99";
 
@@ -61,7 +64,7 @@ public class SkillLevelTaskInput extends TaskInput<SkillLevelTask>
         addTask(SkillLevelTask.builder()
             .skill((Skill) skillField.getSelectedItem())
             .level(Integer.parseInt(levelField.getText()))
-        .build());
+            .build());
     }
 
     @Override
