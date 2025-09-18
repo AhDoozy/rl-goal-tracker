@@ -1,12 +1,10 @@
 package com.toofifty.goaltracker.models;
 
+import com.toofifty.goaltracker.models.enums.Status;
 import com.toofifty.goaltracker.models.task.Task;
-
-import java.lang.reflect.Method;
 
 /**
  * Action for toggling a task's completion state.
- * Uses reflection to avoid a hard dependency on the Status enum.
  */
 public final class ToggleCompleteAction implements ActionHistory.Action
 {
@@ -24,34 +22,17 @@ public final class ToggleCompleteAction implements ActionHistory.Action
     @Override
     public void undo()
     {
-        setStatusByName(oldValue ? "COMPLETED" : "NOT_STARTED");
+        applyCompletion(oldValue);
     }
 
     @Override
     public void redo()
     {
-        setStatusByName(newValue ? "COMPLETED" : "NOT_STARTED");
+        applyCompletion(newValue);
     }
 
-    /**
-     * Set task status by enum name without importing the enum type.
-     * This works whether Status is a nested enum or a top-level type.
-     */
-    private void setStatusByName(String name)
+    private void applyCompletion(boolean completed)
     {
-        try
-        {
-            Object current = task.getStatus();
-            Class<?> enumClass = current.getClass();
-            @SuppressWarnings({"unchecked","rawtypes"})
-            Enum newStatus = Enum.valueOf((Class<Enum>) enumClass, name);
-
-            Method m = task.getClass().getMethod("setStatus", enumClass);
-            m.invoke(task, newStatus);
-        }
-        catch (Exception ignored)
-        {
-            // If we can't reflectively set it, ignore rather than crash.
-        }
+        task.setStatus(completed ? Status.COMPLETED : Status.NOT_STARTED);
     }
 }
