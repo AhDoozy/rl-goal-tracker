@@ -1,12 +1,11 @@
 package com.toofifty.goaltracker.models;
 
 import com.toofifty.goaltracker.models.task.Task;
-
-import java.lang.reflect.Method;
+import com.toofifty.goaltracker.models.enums.Status;
 
 /**
  * Action for toggling a task's completion state.
- * Uses reflection to avoid a hard dependency on the Status enum.
+ * Directly depends on Status enum for compliance with RuneLite rules.
  */
 public final class ToggleCompleteAction implements ActionHistory.Action
 {
@@ -24,34 +23,12 @@ public final class ToggleCompleteAction implements ActionHistory.Action
     @Override
     public void undo()
     {
-        setStatusByName(oldValue ? "COMPLETED" : "NOT_STARTED");
+        task.setStatus(oldValue ? Status.COMPLETED : Status.NOT_STARTED);
     }
 
     @Override
     public void redo()
     {
-        setStatusByName(newValue ? "COMPLETED" : "NOT_STARTED");
-    }
-
-    /**
-     * Set task status by enum name without importing the enum type.
-     * This works whether Status is a nested enum or a top-level type.
-     */
-    private void setStatusByName(String name)
-    {
-        try
-        {
-            Object current = task.getStatus();
-            Class<?> enumClass = current.getClass();
-            @SuppressWarnings({"unchecked","rawtypes"})
-            Enum newStatus = Enum.valueOf((Class<Enum>) enumClass, name);
-
-            Method m = task.getClass().getMethod("setStatus", enumClass);
-            m.invoke(task, newStatus);
-        }
-        catch (Exception ignored)
-        {
-            // If we can't reflectively set it, ignore rather than crash.
-        }
+        task.setStatus(newValue ? Status.COMPLETED : Status.NOT_STARTED);
     }
 }
